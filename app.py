@@ -324,23 +324,30 @@ def cuotas_reales(local, visita):
         if resp.status_code != 200:
             return None, f"Error API: {resp.status_code}"
         eventos = resp.json()
+        # Comparar sin tildes, en cualquier idioma
         loc_k = limpiar(local); vis_k = limpiar(visita)
+        # También mapeo ES→EN via ESPN_MAP inverso
+        ES_EN = {v: limpiar(k) for k, v in ESPN_MAP.items()}
+        loc_k2 = ES_EN.get(local, loc_k)
+        vis_k2 = ES_EN.get(visita, vis_k)
         for ev in eventos:
             home_k = limpiar(ev.get("home_team",""))
             away_k = limpiar(ev.get("away_team",""))
-            if (home_k==loc_k and away_k==vis_k) or (home_k==vis_k and away_k==loc_k):
-                cuotas = {}
-                for book in ev.get("bookmakers",[]):
-                    nombre_book = book["title"]
-                    for mkt in book.get("markets",[]):
-                        if mkt["key"]=="h2h":
-                            odds = {o["name"]:o["price"] for o in mkt["outcomes"]}
-                            cL = odds.get(ev["home_team"],0)
-                            cV = odds.get(ev["away_team"],0)
-                            cE = odds.get("Draw",3.30)
-                            if cL and cV:
-                                cuotas[nombre_book] = (cL,cE,cV)
-                return cuotas if cuotas else None, "Sin cuotas disponibles"
+            if not ((home_k in (loc_k, loc_k2) and away_k in (vis_k, vis_k2)) or
+                    (home_k in (vis_k, vis_k2) and away_k in (loc_k, loc_k2))):
+                continue
+            cuotas = {}
+            for book in ev.get("bookmakers",[]):
+                nombre_book = book["title"]
+                for mkt in book.get("markets",[]):
+                    if mkt["key"]=="h2h":
+                        odds = {o["name"]:o["price"] for o in mkt["outcomes"]}
+                        cL = odds.get(ev["home_team"],0)
+                        cV = odds.get(ev["away_team"],0)
+                        cE = odds.get("Draw",3.30)
+                        if cL and cV:
+                            cuotas[nombre_book] = (cL,cE,cV)
+            return cuotas if cuotas else None, "Sin cuotas disponibles"
         return None, "Partido no encontrado en la API"
     except Exception as e:
         return None, str(e)
