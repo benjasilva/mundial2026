@@ -143,10 +143,10 @@ FIXTURE_2026 = [
     ("2026-06-17","Portugal","DR Congo",1,1),
     ("2026-06-17","England","Croatia",4,2),
     ("2026-06-17","Ghana","Panama",1,0),
-    ("2026-06-18","Canada","Qatar",None,None),
-    ("2026-06-18","Switzerland","Bosnia and Herzegovina",None,None),
-    ("2026-06-18","Mexico","South Korea",None,None),
-    ("2026-06-18","Czech Republic","South Africa",None,None),
+    ("2026-06-18","Canada","Qatar",6,0),
+    ("2026-06-18","Switzerland","Bosnia and Herzegovina",4,1),
+    ("2026-06-18","Mexico","South Korea",0,1),
+    ("2026-06-18","Czech Republic","South Africa",1,1),
     ("2026-06-19","United States","Australia",None,None),
     ("2026-06-19","Turkey","Paraguay",None,None),
     ("2026-06-19","Scotland","Morocco",None,None),
@@ -293,6 +293,11 @@ def poisson_probs(ll, lv):
             else: pv+=p
     gi,gj = np.unravel_index(np.argmax(mat),mat.shape)
     return pl,pe,pv,int(gi),int(gj),mat
+
+def top_marcadores(mat, n=3):
+    """Devuelve los n marcadores más probables (gl, gv, %) de la matriz Poisson."""
+    flat = sorted([(mat[i,j]*100, i, j) for i in range(7) for j in range(7)], reverse=True)
+    return [(i, j, p) for p, i, j in flat[:n]]
 
 def cuotas_simuladas(local, visita):
     d = st.session_state.datos
@@ -872,11 +877,16 @@ with tab_fix:
                 else:
                     fav=f"▶ Empate ({r['prob_e']*100:.0f}%)"
                 estado_badge = '<span style="color:#6c7086;font-size:.72rem;margin-left:8px">🕐 Por jugar</span>'
+                top3 = top_marcadores(r['matriz'])
+                alt_txt = "  ".join([f"{gl}–{gv} <span style='color:#6c7086'>({p:.1f}%)</span>" for gl,gv,p in top3])
                 st.markdown(f"""<div class="fixture-row">
                   {hora_badge}
                   <span class="fixture-team">{local}</span>
                   <span class="fixture-pred" title="{fav}">~ {r['goles_l']}–{r['goles_v']} ~</span>
                   <span class="fixture-team right">{visita}</span>{estado_badge}
+                  </div>
+                  <div style="font-size:.70rem;color:#a6adc8;padding:2px 8px 6px 52px">
+                    Más probables: {alt_txt}
                   </div>""", unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────────────────
@@ -1003,6 +1013,12 @@ with tab_pred:
         usar_api = bool(st.session_state.odds_api_key)
         if usar_api:
             st.success("✅ API key configurada — se usarán cuotas reales cuando estén disponibles.")
+            if st.button("🔍 Probar conexión API"):
+                cuotas_test, msg_test = cuotas_reales("Argentina", "Austria")
+                if cuotas_test:
+                    st.success(f"Conexión OK — {len(cuotas_test)} casas disponibles para Argentina vs Austria")
+                else:
+                    st.warning(f"Respuesta API: {msg_test}")
 
     equipos = sorted(st.session_state.datos.keys())
     c1,c2 = st.columns(2)
@@ -1056,6 +1072,13 @@ with tab_pred:
             rows_c = [{'Casa':c,f'Local ({loc})':cL,'Empate':cE,f'Visita ({vis})':cV}
                       for c,(cL,cE,cV) in r['cuotas'].items()]
             st.dataframe(pd.DataFrame(rows_c).set_index('Casa'), use_container_width=True)
+
+        top3 = top_marcadores(r['matriz'])
+        top3_html = "  ·  ".join([f"<strong>{gl}–{gv}</strong> ({p:.1f}%)" for gl,gv,p in top3])
+        st.markdown(f"""<div class="card" style="padding:12px 16px">
+          <div style="color:#a6adc8;font-size:.75rem;margin-bottom:6px">🎯 MARCADORES MÁS PROBABLES</div>
+          <div style="font-size:.95rem">{top3_html}</div>
+        </div>""", unsafe_allow_html=True)
 
         with st.expander("🔢 Matriz de marcadores (% probabilidad)"):
             st.caption("Filas = goles local · Columnas = goles visita")
@@ -1115,6 +1138,56 @@ with tab_stats:
         st.dataframe(pd.DataFrame(rows).set_index('Equipo'),use_container_width=True)
     else:
         st.info("Sin partidos registrados.")
+
+    # ── Precisión del modelo ──────────────────────────────────────────
+    st.markdown("### 🎯 Precisión del modelo")
+    todos_cerrados = []
+    for _,loc_en,vis_en,gl,gv in FIXTURE_2026:
+        if gl is None: continue
+        loc2, vis2 = t(loc_en), t(vis_en)
+        if loc2 in DATOS_INICIAL and vis2 in DATOS_INICIAL:
+            todos_cerrados.append((loc2, vis2, gl, gv))
+    for r2 in st.session_state.resultados_extra:
+        if r2['local'] in DATOS_INICIAL and r2['visita'] in DATOS_INICIAL:
+            todos_cerrados.append((r2['local'], r2['visita'], r2['gl'], r2['gv']))
+
+    if todos_cerrados:
+        ac_ganador = ac_exacto = 0
+        filas_acc = []
+        for loc2, vis2, gl_r, gv_r in todos_cerrados:
+            d0 = DATOS_INICIAL
+            ll0 = d0[loc2]['ataque']*d0[vis2]['defensa']*PROMEDIO_GOL*d0[loc2]['factor']
+            lv0 = d0[vis2]['ataque']*d0[loc2]['defensa']*PROMEDIO_GOL*d0[vis2]['factor']
+            pl0,pe0,pv0,gi0,gj0,_ = poisson_probs(ll0, lv0)
+            if pl0>=pe0 and pl0>=pv0: pred_res='L'
+            elif pe0>=pl0 and pe0>=pv0: pred_res='E'
+            else: pred_res='V'
+            if gl_r>gv_r: real_res='L'
+            elif gl_r==gv_r: real_res='E'
+            else: real_res='V'
+            ok_g = pred_res==real_res
+            ok_e = (gi0==gl_r and gj0==gv_r)
+            if ok_g: ac_ganador+=1
+            if ok_e: ac_exacto+=1
+            filas_acc.append({
+                'Partido': f"{loc2} vs {vis2}",
+                'Real': f"{gl_r}–{gv_r}",
+                'Predicho': f"{gi0}–{gj0}",
+                '¿Ganador OK?': '✅' if ok_g else '❌',
+                '¿Exacto?': '✅' if ok_e else '❌',
+            })
+
+        n = len(todos_cerrados)
+        pct_g = ac_ganador/n*100
+        pct_e = ac_exacto/n*100
+        c1,c2,c3 = st.columns(3)
+        c1.metric("Partidos analizados", n)
+        c2.metric("Acierto ganador", f"{pct_g:.0f}%", f"{ac_ganador}/{n}")
+        c3.metric("Acierto marcador exacto", f"{pct_e:.0f}%", f"{ac_exacto}/{n}")
+        with st.expander("Ver detalle partido a partido"):
+            st.dataframe(pd.DataFrame(filas_acc).set_index('Partido'), use_container_width=True)
+    else:
+        st.info("Aún no hay partidos cerrados para evaluar.")
 
     st.markdown("### Ratings base — todos los equipos")
     rows_b=[{'Equipo':eq,'Ataque':v['ataque'],'Defensa':v['defensa'],'Factor':v['factor']}
