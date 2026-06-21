@@ -317,7 +317,7 @@ def cuotas_reales(local, visita):
         return None, "Sin API key"
     try:
         resp = requests.get(
-            "https://api.the-odds-api.com/v4/sports/soccer_world_cup/odds/",
+            "https://api.the-odds-api.com/v4/sports/soccer_fifa_world_cup/odds/",
             params={"apiKey":key,"regions":"eu","markets":"h2h","oddsFormat":"decimal"},
             timeout=8
         )
