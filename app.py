@@ -273,12 +273,69 @@ def nombre_oficial(inp):
         if limpiar(n)==k: return n
     return None
 
-def lambdas(local, visita):
+# Mapa inverso equipo → grupo
+EQUIPO_GRUPO = {eq: g for g, eqs in GRUPOS.items() for eq in eqs}
+
+# Fechas de 3era jornada de grupos
+FECHAS_J3 = {
+    "2026-06-24","2026-06-25","2026-06-26","2026-06-27"
+}
+
+def factor_urgencia(equipo, grupo):
+    """
+    Retorna (f_atq, f_def) según necesidad de clasificación en 3era fecha.
+    Lógica:
+      - Clasificado seguro      → ligero repliegue (0.96, 1.04)
+      - Necesita solo empatar   → equilibrado ofensivo (1.06, 1.04)
+      - Necesita ganar          → máxima urgencia (1.15, 0.91)
+      - Eliminado sin opciones  → baja motivación (0.92, 0.96)
+    """
+    try:
+        orden, tab = tabla_grupo(grupo)
+        pts    = tab[equipo]['Pts']
+        pos    = orden.index(equipo) + 1
+        pts_2do = tab[orden[1]]['Pts']
+        pts_3ro = tab[orden[2]]['Pts']
+        pts_max = pts + 3  # máximo posible ganando
+
+        # Clasificado matemáticamente (no puede ser alcanzado por 3ro)
+        if pos <= 2 and pts > pts_3ro + 3:
+            return 0.96, 1.04
+
+        # Eliminado (ni ganando llega al 2do y ni aspirar a mejor 3ro con ≥4 pts)
+        if pts_max < pts_2do and pts_max < 4:
+            return 0.92, 0.96
+
+        # Empate alcanza para igualar o superar al 2do
+        if pts + 1 >= pts_2do:
+            return 1.06, 1.04
+
+        # Necesita ganar sí o sí
+        return 1.15, 0.91
+
+    except Exception:
+        return 1.0, 1.0
+
+def lambdas(local, visita, fecha=None):
     d = st.session_state.datos
     fl = 1+(d[local]['g_favor']*0.12)  if d[local]['PJ']>0  else 1.0
     fv = 1+(d[visita]['g_contra']*0.09) if d[visita]['PJ']>0 else 1.0
     ll = d[local]['ataque']*d[visita]['defensa']*PROMEDIO_GOL*d[local]['factor']*fl
     lv = d[visita]['ataque']*d[local]['defensa']*PROMEDIO_GOL*d[visita]['factor']*fv
+
+    # Aplicar presión de clasificación en 3era fecha
+    if fecha in FECHAS_J3:
+        grp_l = EQUIPO_GRUPO.get(local)
+        grp_v = EQUIPO_GRUPO.get(visita)
+        if grp_l:
+            fa_l, fd_l = factor_urgencia(local, grp_l)
+            ll *= fa_l
+            lv *= fd_l  # defensa rival se ajusta por urgencia local
+        if grp_v:
+            fa_v, fd_v = factor_urgencia(visita, grp_v)
+            lv *= fa_v
+            ll *= fd_v
+
     return ll, lv
 
 def poisson_probs(ll, lv):
@@ -352,8 +409,8 @@ def cuotas_reales(local, visita):
     except Exception as e:
         return None, str(e)
 
-def calcular_prediccion(local, visita, usar_api=False):
-    ll, lv = lambdas(local, visita)
+def calcular_prediccion(local, visita, usar_api=False, fecha=None):
+    ll, lv = lambdas(local, visita, fecha=fecha)
     pl, pe, pv, gi, gj, mat = poisson_probs(ll, lv)
 
     if usar_api:
@@ -876,7 +933,7 @@ with tab_fix:
                   </div>""", unsafe_allow_html=True)
 
             elif local in st.session_state.datos and visita in st.session_state.datos:
-                r = calcular_prediccion(local,visita)
+                r = calcular_prediccion(local, visita, fecha=fecha)
                 if r['prob_l']>r['prob_v'] and r['prob_l']>r['prob_e']:
                     fav=f"▶ {local} ({r['prob_l']*100:.0f}%)"
                 elif r['prob_v']>r['prob_l'] and r['prob_v']>r['prob_e']:
@@ -886,12 +943,30 @@ with tab_fix:
                 estado_badge = '<span style="color:#6c7086;font-size:.72rem;margin-left:8px">🕐 Por jugar</span>'
                 top3 = top_marcadores(r['matriz'])
                 alt_txt = "  ".join([f"{gl}–{gv} <span style='color:#6c7086'>({p:.1f}%)</span>" for gl,gv,p in top3])
+
+                # Badge urgencia J3
+                urgencia_txt = ""
+                if fecha in FECHAS_J3:
+                    def _urg_label(eq):
+                        grp = EQUIPO_GRUPO.get(eq)
+                        if not grp: return ""
+                        fa, _ = factor_urgencia(eq, grp)
+                        if fa >= 1.14:   return f"🔥 {eq} necesita ganar"
+                        elif fa >= 1.05: return f"⚡ {eq} necesita al menos empatar"
+                        elif fa <= 0.93: return f"💤 {eq} sin opciones"
+                        else:            return f"✅ {eq} clasificado"
+                    ul = _urg_label(local); uv = _urg_label(visita)
+                    partes = [x for x in [ul, uv] if x]
+                    if partes:
+                        urgencia_txt = f'<div style="font-size:.68rem;color:#fab005;padding:0 8px 2px 52px">{" · ".join(partes)}</div>'
+
                 st.markdown(f"""<div class="fixture-row">
                   {hora_badge}
                   <span class="fixture-team">{local}</span>
                   <span class="fixture-pred" title="{fav}">~ {r['goles_l']}–{r['goles_v']} ~</span>
                   <span class="fixture-team right">{visita}</span>{estado_badge}
                   </div>
+                  {urgencia_txt}
                   <div style="font-size:.70rem;color:#a6adc8;padding:2px 8px 6px 52px">
                     Más probables: {alt_txt}
                   </div>""", unsafe_allow_html=True)
@@ -1037,9 +1112,12 @@ with tab_pred:
             index=opts.index("Corea del Sur") if "Corea del Sur" in opts else 0,
             key="sel_visita")
 
+    aplicar_j3 = st.checkbox("🏁 Aplicar presión de clasificación (3era fecha grupos)", value=False)
+    fecha_pred = "2026-06-24" if aplicar_j3 else None  # activa el factor J3
+
     if st.button("⚡ Predecir", use_container_width=True, type="primary"):
         with st.spinner("Calculando..."):
-            st.session_state.ultima_pred = calcular_prediccion(local,visita,usar_api=usar_api)
+            st.session_state.ultima_pred = calcular_prediccion(local, visita, usar_api=usar_api, fecha=fecha_pred)
 
     if 'ultima_pred' in st.session_state:
         r = st.session_state.ultima_pred
