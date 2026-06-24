@@ -975,28 +975,28 @@ with tab_fix:
 # ─────────────────────────────────────────────────────────────────────
 # TAB 2: GRUPOS
 # ─────────────────────────────────────────────────────────────────────
+def tabla_grupo(letra):
+    equipos = GRUPOS[letra]
+    tab = {e:{'PJ':0,'PG':0,'PE':0,'PP':0,'GF':0,'GC':0,'Pts':0} for e in equipos}
+    fijos = {}
+    for _,local_en,visita_en,gl,gv in FIXTURE_2026:
+        if gl is None: continue
+        loc,vis = t(local_en),t(visita_en)
+        if loc in tab and vis in tab: fijos[(loc,vis)]=(gl,gv)
+    for r in st.session_state.resultados_extra:
+        if r['local'] in tab and r['visita'] in tab:
+            fijos[(r['local'],r['visita'])]=(r['gl'],r['gv'])
+    for (loc,vis),(gl,gv) in fijos.items():
+        tab[loc]['PJ']+=1; tab[loc]['GF']+=gl; tab[loc]['GC']+=gv
+        tab[vis]['PJ']+=1; tab[vis]['GF']+=gv; tab[vis]['GC']+=gl
+        if gl>gv:   tab[loc]['PG']+=1; tab[loc]['Pts']+=3; tab[vis]['PP']+=1
+        elif gl==gv: tab[loc]['PE']+=1; tab[loc]['Pts']+=1; tab[vis]['PE']+=1; tab[vis]['Pts']+=1
+        else:        tab[vis]['PG']+=1; tab[vis]['Pts']+=3; tab[loc]['PP']+=1
+    orden = sorted(equipos, key=lambda e:(tab[e]['Pts'],tab[e]['GF']-tab[e]['GC'],tab[e]['GF']), reverse=True)
+    return orden, tab
+
 with tab_grupos:
     st.markdown("### Tablas de posiciones — 12 grupos")
-
-    def tabla_grupo(letra):
-        equipos = GRUPOS[letra]
-        tab = {e:{'PJ':0,'PG':0,'PE':0,'PP':0,'GF':0,'GC':0,'Pts':0} for e in equipos}
-        fijos = {}
-        for _,local_en,visita_en,gl,gv in FIXTURE_2026:
-            if gl is None: continue
-            loc,vis = t(local_en),t(visita_en)
-            if loc in tab and vis in tab: fijos[(loc,vis)]=(gl,gv)
-        for r in st.session_state.resultados_extra:
-            if r['local'] in tab and r['visita'] in tab:
-                fijos[(r['local'],r['visita'])]=(r['gl'],r['gv'])
-        for (loc,vis),(gl,gv) in fijos.items():
-            tab[loc]['PJ']+=1; tab[loc]['GF']+=gl; tab[loc]['GC']+=gv
-            tab[vis]['PJ']+=1; tab[vis]['GF']+=gv; tab[vis]['GC']+=gl
-            if gl>gv:   tab[loc]['PG']+=1; tab[loc]['Pts']+=3; tab[vis]['PP']+=1
-            elif gl==gv: tab[loc]['PE']+=1; tab[loc]['Pts']+=1; tab[vis]['PE']+=1; tab[vis]['Pts']+=1
-            else:        tab[vis]['PG']+=1; tab[vis]['Pts']+=3; tab[loc]['PP']+=1
-        orden = sorted(equipos, key=lambda e:(tab[e]['Pts'],tab[e]['GF']-tab[e]['GC'],tab[e]['GF']), reverse=True)
-        return orden, tab
 
     # Mostrar grupos en 3 columnas
     letras = list(GRUPOS.keys())
