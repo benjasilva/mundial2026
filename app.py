@@ -1008,7 +1008,7 @@ with tab_grupos:
     with col_tit:
         st.markdown("### Tablas de posiciones — 12 grupos")
     with col_btn:
-        if st.button("🔄 Actualizar resultados", use_container_width=True):
+        if st.button("🔄 Actualizar resultados", use_container_width=True, key="btn_refresh_grupos"):
             st.session_state.espn_fetched = False
             st.rerun()
 
