@@ -1004,7 +1004,13 @@ with tab_fix:
 # TAB 2: GRUPOS
 # ─────────────────────────────────────────────────────────────────────
 with tab_grupos:
-    st.markdown("### Tablas de posiciones — 12 grupos")
+    col_tit, col_btn = st.columns([3,1])
+    with col_tit:
+        st.markdown("### Tablas de posiciones — 12 grupos")
+    with col_btn:
+        if st.button("🔄 Actualizar resultados", use_container_width=True):
+            st.session_state.espn_fetched = False
+            st.rerun()
 
     # Mostrar grupos en 3 columnas
     letras = list(GRUPOS.keys())
@@ -1029,6 +1035,49 @@ with tab_grupos:
                 st.dataframe(df_g, use_container_width=True, hide_index=False)
 
     st.caption("✅ clasificado directo · 🟡 candidato a mejor tercero · ❌ eliminado")
+
+    # ── Ranking mejores terceros ──────────────────────────────────────
+    st.markdown("---")
+    st.markdown("### 🥉 Ranking mejores terceros — 8 clasifican")
+    st.caption("Se comparan todos los 3eros de los 12 grupos. Clasifican los 8 con más puntos (desempate: DG → GF).")
+
+    terceros = []
+    for letra in letras:
+        orden, tab = tabla_grupo(letra)
+        if len(orden) >= 3:
+            eq = orden[2]  # 3er lugar
+            v  = tab[eq]
+            dg = v['GF'] - v['GC']
+            terceros.append({
+                'Grupo': letra,
+                'Equipo': eq,
+                'PJ': v['PJ'],
+                'Pts': v['Pts'],
+                'GF': v['GF'],
+                'GC': v['GC'],
+                'DG': dg,
+            })
+
+    terceros_ord = sorted(terceros, key=lambda x: (x['Pts'], x['DG'], x['GF']), reverse=True)
+
+    rows_t = []
+    for i, r in enumerate(terceros_ord, 1):
+        pasa = i <= 8
+        dg_str = f"{'+' if r['DG']>=0 else ''}{r['DG']}"
+        rows_t.append({
+            'Pos': i,
+            '': '✅' if pasa else '❌',
+            'Grupo': r['Grupo'],
+            'Equipo': r['Equipo'],
+            'PJ': r['PJ'],
+            'Pts': r['Pts'],
+            'GF': r['GF'],
+            'GC': r['GC'],
+            'DG': dg_str,
+        })
+
+    df_t = pd.DataFrame(rows_t).set_index('Pos')
+    st.dataframe(df_t, use_container_width=True, hide_index=False)
 
 # TAB 3: MONTE CARLO
 # ─────────────────────────────────────────────────────────────────────
