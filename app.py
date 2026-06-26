@@ -338,8 +338,9 @@ def factor_urgencia(equipo, grupo):
 
 def lambdas(local, visita, fecha=None):
     d = st.session_state.datos
-    fl = 1+(d[local]['g_favor']*0.12)  if d[local]['PJ']>0  else 1.0
-    fv = 1+(d[visita]['g_contra']*0.09) if d[visita]['PJ']>0 else 1.0
+    # Factor de rendimiento simétrico — misma fórmula para ambos (cancha neutral)
+    fl = 1+(d[local]['g_favor'] *0.12) if d[local]['PJ'] >0 else 1.0
+    fv = 1+(d[visita]['g_favor']*0.12) if d[visita]['PJ']>0 else 1.0
     ll = d[local]['ataque']*d[visita]['defensa']*PROMEDIO_GOL*d[local]['factor']*fl
     lv = d[visita]['ataque']*d[local]['defensa']*PROMEDIO_GOL*d[visita]['factor']*fv
 
