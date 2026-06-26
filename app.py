@@ -379,8 +379,10 @@ def top_marcadores(mat, n=3):
 
 def cuotas_simuladas(local, visita):
     d = st.session_state.datos
-    atk,dfs = d[local]['ataque'],d[visita]['defensa']
-    prob_l = atk/(atk+dfs)
+    # Fuerza relativa simétrica (cancha neutral)
+    sl = d[local]['ataque']  / d[visita]['defensa']
+    sv = d[visita]['ataque'] / d[local]['defensa']
+    prob_l = sl / (sl + sv)
     bl = max(1.20,min(8.00,1/prob_l))
     bv = max(1.20,min(8.00,1/(1-prob_l)))
     np.random.seed(int(len(local)+len(visita)))
@@ -414,16 +416,21 @@ def cuotas_reales(local, visita):
             if not ((home_k in (loc_k, loc_k2) and away_k in (vis_k, vis_k2)) or
                     (home_k in (vis_k, vis_k2) and away_k in (loc_k, loc_k2))):
                 continue
+            # Detectar si los equipos están invertidos respecto al orden del usuario
+            api_home_k = limpiar(ev.get("home_team",""))
+            invertidos = api_home_k not in (loc_k, loc_k2)
             cuotas = {}
             for book in ev.get("bookmakers",[]):
                 nombre_book = book["title"]
                 for mkt in book.get("markets",[]):
                     if mkt["key"]=="h2h":
                         odds = {o["name"]:o["price"] for o in mkt["outcomes"]}
-                        cL = odds.get(ev["home_team"],0)
-                        cV = odds.get(ev["away_team"],0)
+                        c_home = odds.get(ev["home_team"],0)
+                        c_away = odds.get(ev["away_team"],0)
                         cE = odds.get("Draw",3.30)
-                        if cL and cV:
+                        if c_home and c_away:
+                            # Asignar cL/cV según el orden elegido por el usuario
+                            cL, cV = (c_away, c_home) if invertidos else (c_home, c_away)
                             cuotas[nombre_book] = (cL,cE,cV)
             return cuotas if cuotas else None, "Sin cuotas disponibles"
         return None, "Partido no encontrado en la API"
