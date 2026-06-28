@@ -351,11 +351,20 @@ def lambdas(local, visita, fecha=None):
         if grp_l:
             fa_l, fd_l = factor_urgencia(local, grp_l)
             ll *= fa_l
-            lv *= fd_l  # defensa rival se ajusta por urgencia local
+            lv *= fd_l
         if grp_v:
             fa_v, fd_v = factor_urgencia(visita, grp_v)
             lv *= fa_v
             ll *= fd_v
+
+    # Aplicar factor de estadísticas reales (disparos al arco)
+    ts = build_team_stats()
+    if local in ts:
+        ll *= ts[local]['f_atq']
+        lv *= ts[local]['f_def']
+    if visita in ts:
+        lv *= ts[visita]['f_atq']
+        ll *= ts[visita]['f_def']
 
     return ll, lv
 
@@ -588,6 +597,98 @@ def auto_fetch_espn():
                 ya_registrados.add(par)
         d += timedelta(days=1)
     return nuevos
+
+ESPN_SUMMARY_URL = "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/summary"
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def fetch_event_ids(fecha_str):
+    """Devuelve lista de (event_id, loc, vis) para partidos terminados en esa fecha."""
+    try:
+        resp = requests.get(ESPN_URL, params={"dates": fecha_str}, timeout=8)
+        if resp.status_code != 200: return []
+        ids = []
+        for ev in resp.json().get("events", []):
+            for comp in ev.get("competitions", []):
+                estado = comp.get("status",{}).get("type",{}).get("name","")
+                if estado not in ("STATUS_FINAL","STATUS_FULL_TIME"): continue
+                competidores = comp.get("competitors",[])
+                if len(competidores) < 2: continue
+                h = next((c for c in competidores if c.get("homeAway")=="home"), None)
+                a = next((c for c in competidores if c.get("homeAway")=="away"), None)
+                if h and a:
+                    loc = espn_nombre(h.get("team",{}).get("displayName",""))
+                    vis = espn_nombre(a.get("team",{}).get("displayName",""))
+                    if loc and vis:
+                        ids.append((ev["id"], loc, vis))
+        return ids
+    except: return []
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def fetch_match_stats(event_id):
+    """Devuelve {local: {sot, shots, poss}, visita: {...}} para un partido."""
+    try:
+        resp = requests.get(ESPN_SUMMARY_URL, params={"event": event_id}, timeout=8)
+        if resp.status_code != 200: return None
+        data = resp.json()
+        teams = data.get("boxscore",{}).get("teams",[])
+        if len(teams) < 2: return None
+        resultado = {}
+        for td in teams:
+            nombre = espn_nombre(td.get("team",{}).get("displayName",""))
+            if not nombre: continue
+            stats = {s["name"]: s.get("value", 0) for s in td.get("statistics",[])}
+            resultado[nombre] = {
+                'sot':   float(stats.get("shotsOnTarget", 0)),
+                'shots': float(stats.get("totalShots", 0)),
+                'poss':  float(stats.get("possessionPct", 50)),
+            }
+        return resultado if len(resultado)==2 else None
+    except: return None
+
+def build_team_stats():
+    """Construye promedios de disparos al arco y posesión por equipo en el torneo."""
+    from datetime import date, timedelta
+    if 'team_stats_cache' in st.session_state:
+        return st.session_state.team_stats_cache
+
+    acum = {}  # equipo → {sot_for:[], sot_against:[], poss:[]}
+    inicio = date(2026, 6, 11)
+    hoy = date.today()
+    d = inicio
+    while d <= hoy:
+        for eid, loc, vis in fetch_event_ids(d.strftime("%Y%m%d")):
+            stats = fetch_match_stats(eid)
+            if not stats or loc not in stats or vis not in stats:
+                d += timedelta(days=1)
+                continue
+            for eq, rival in [(loc, vis), (vis, loc)]:
+                if eq not in acum:
+                    acum[eq] = {'sot_for':[], 'sot_against':[], 'poss':[]}
+                acum[eq]['sot_for'].append(stats[eq]['sot'])
+                acum[eq]['sot_against'].append(stats[rival]['sot'])
+                acum[eq]['poss'].append(stats[eq]['poss'])
+        d += timedelta(days=1)
+
+    # Calcular promedios y factor relativo al promedio del torneo
+    promedios = {}
+    if acum:
+        avg_sot = sum(v for eq in acum for v in acum[eq]['sot_for']) / max(sum(len(acum[eq]['sot_for']) for eq in acum), 1)
+        for eq, v in acum.items():
+            sot_for  = sum(v['sot_for'])  / max(len(v['sot_for']), 1)
+            sot_ag   = sum(v['sot_against']) / max(len(v['sot_against']), 1)
+            poss_avg = sum(v['poss']) / max(len(v['poss']), 1)
+            # Factor ataque: más disparos al arco que el promedio → bonus
+            f_atq = (sot_for  / max(avg_sot, 0.1)) ** 0.25  # efecto suavizado
+            f_def = (avg_sot  / max(sot_ag,  0.1)) ** 0.20
+            promedios[eq] = {
+                'sot_for': round(sot_for, 1),
+                'sot_ag':  round(sot_ag, 1),
+                'poss':    round(poss_avg, 1),
+                'f_atq':   round(f_atq, 3),
+                'f_def':   round(f_def, 3),
+            }
+    st.session_state.team_stats_cache = promedios
+    return promedios
 
 # Auto-fetch ESPN al iniciar (una sola vez por sesión)
 if not st.session_state.espn_fetched:
@@ -1335,6 +1436,34 @@ with tab_stats:
             st.dataframe(pd.DataFrame(filas_acc).set_index('Partido'), use_container_width=True)
     else:
         st.info("Aún no hay partidos cerrados para evaluar.")
+
+    # ── Estadísticas reales del torneo (ESPN) ────────────────────────
+    st.markdown("### 📊 Estadísticas reales del torneo")
+    st.caption("Disparos al arco, posesión y factores de ajuste calculados desde los partidos jugados.")
+    with st.spinner("Cargando estadísticas ESPN..."):
+        ts = build_team_stats()
+    if ts:
+        rows_ts = []
+        for eq, v in sorted(ts.items(), key=lambda x: -x[1]['sot_for']):
+            rows_ts.append({
+                'Equipo': eq,
+                'Disp. arco / partido': v['sot_for'],
+                'Disp. recibidos / partido': v['sot_ag'],
+                'Posesión %': v['poss'],
+                'Factor ataque': v['f_atq'],
+                'Factor defensa': v['f_def'],
+            })
+        df_ts = pd.DataFrame(rows_ts).set_index('Equipo')
+        st.dataframe(
+            df_ts.style
+                .background_gradient(subset=['Disp. arco / partido'], cmap='Greens')
+                .background_gradient(subset=['Disp. recibidos / partido'], cmap='Reds_r')
+                .background_gradient(subset=['Posesión %'], cmap='Blues')
+                .format({'Factor ataque':'{:.3f}','Factor defensa':'{:.3f}','Posesión %':'{:.1f}'}),
+            use_container_width=True
+        )
+    else:
+        st.info("No hay estadísticas disponibles aún.")
 
     st.markdown("### Ratings base — todos los equipos")
     rows_b=[{'Equipo':eq,'Ataque':v['ataque'],'Defensa':v['defensa'],'Factor':v['factor']}
