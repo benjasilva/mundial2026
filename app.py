@@ -1305,8 +1305,9 @@ with tab_stats:
             ll0 = d0[loc2]['ataque']*d0[vis2]['defensa']*PROMEDIO_GOL*d0[loc2]['factor']
             lv0 = d0[vis2]['ataque']*d0[loc2]['defensa']*PROMEDIO_GOL*d0[vis2]['factor']
             pl0,pe0,pv0,gi0,gj0,_ = poisson_probs(ll0, lv0)
-            if pl0>=pe0 and pl0>=pv0: pred_res='L'
-            elif pe0>=pl0 and pe0>=pv0: pred_res='E'
+            # Usar el marcador predicho (moda) para determinar resultado, no las probs acumuladas
+            if gi0 > gj0: pred_res='L'
+            elif gi0 == gj0: pred_res='E'
             else: pred_res='V'
             if gl_r>gv_r: real_res='L'
             elif gl_r==gv_r: real_res='E'
