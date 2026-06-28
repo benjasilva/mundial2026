@@ -307,6 +307,9 @@ def init_state():
         st.session_state.odds_api_key = ""
     if 'espn_fetched' not in st.session_state:
         st.session_state.espn_fetched = False
+    if 'alineaciones' not in st.session_state:
+        # {key: {'aus_local': [], 'aus_visita': []}}  key = "Local_vs_Visita"
+        st.session_state.alineaciones = {}
 
 init_state()
 
@@ -507,8 +510,106 @@ def cuotas_reales(local, visita):
     except Exception as e:
         return None, str(e)
 
-def calcular_prediccion(local, visita, usar_api=False, fecha=None):
+# =====================================================================
+# FACTOR ESTRELLA — jugadores clave por selección
+# impacto_atq: fracción de reducción del lambda ofensivo si el jugador no juega
+# =====================================================================
+ESTRELLAS = {
+    'Argentina':    [{'nombre':'Lionel Messi',        'impacto_atq':0.28},
+                     {'nombre':'Lautaro Martínez',    'impacto_atq':0.14}],
+    'Brasil':       [{'nombre':'Vinicius Jr.',         'impacto_atq':0.24},
+                     {'nombre':'Rodrygo',              'impacto_atq':0.12}],
+    'Colombia':     [{'nombre':'Luis Díaz',            'impacto_atq':0.20},
+                     {'nombre':'James Rodríguez',      'impacto_atq':0.16}],
+    'Uruguay':      [{'nombre':'Darwin Núñez',         'impacto_atq':0.22},
+                     {'nombre':'Federico Valverde',    'impacto_atq':0.14}],
+    'Ecuador':      [{'nombre':'Enner Valencia',       'impacto_atq':0.20}],
+    'Paraguay':     [{'nombre':'Miguel Almirón',       'impacto_atq':0.18}],
+    'México':       [{'nombre':'Raúl Jiménez',         'impacto_atq':0.20},
+                     {'nombre':'Hirving Lozano',       'impacto_atq':0.14}],
+    'Estados Unidos':[{'nombre':'Christian Pulisic',  'impacto_atq':0.24},
+                      {'nombre':'Gio Reyna',           'impacto_atq':0.12}],
+    'Canadá':       [{'nombre':'Alphonso Davies',      'impacto_atq':0.22},
+                     {'nombre':'Jonathan David',       'impacto_atq':0.18}],
+    'Panamá':       [{'nombre':'Rolando Blackburn',    'impacto_atq':0.16}],
+    'Francia':      [{'nombre':'Kylian Mbappé',        'impacto_atq':0.30},
+                     {'nombre':'Antoine Griezmann',    'impacto_atq':0.14}],
+    'España':       [{'nombre':'Lamine Yamal',         'impacto_atq':0.18},
+                     {'nombre':'Álvaro Morata',        'impacto_atq':0.14},
+                     {'nombre':'Dani Olmo',            'impacto_atq':0.12}],
+    'Portugal':     [{'nombre':'Cristiano Ronaldo',    'impacto_atq':0.22},
+                     {'nombre':'Bruno Fernandes',      'impacto_atq':0.18}],
+    'Alemania':     [{'nombre':'Florian Wirtz',        'impacto_atq':0.20},
+                     {'nombre':'Jamal Musiala',        'impacto_atq':0.18}],
+    'Inglaterra':   [{'nombre':'Harry Kane',           'impacto_atq':0.24},
+                     {'nombre':'Jude Bellingham',      'impacto_atq':0.20}],
+    'Países Bajos': [{'nombre':'Cody Gakpo',           'impacto_atq':0.18},
+                     {'nombre':'Memphis Depay',        'impacto_atq':0.14}],
+    'Noruega':      [{'nombre':'Erling Haaland',       'impacto_atq':0.38}],
+    'Bélgica':      [{'nombre':'Kevin De Bruyne',      'impacto_atq':0.22},
+                     {'nombre':'Romelu Lukaku',        'impacto_atq':0.16}],
+    'Croacia':      [{'nombre':'Luka Modrić',          'impacto_atq':0.18},
+                     {'nombre':'Ivan Perišić',         'impacto_atq':0.14}],
+    'Suiza':        [{'nombre':'Xherdan Shaqiri',      'impacto_atq':0.14},
+                     {'nombre':'Breel Embolo',         'impacto_atq':0.12}],
+    'Turquía':      [{'nombre':'Hakan Çalhanoğlu',     'impacto_atq':0.18},
+                     {'nombre':'Burak Yılmaz',         'impacto_atq':0.14}],
+    'Austria':      [{'nombre':'Marcel Sabitzer',      'impacto_atq':0.16},
+                     {'nombre':'Marko Arnautović',     'impacto_atq':0.14}],
+    'Escocia':      [{'nombre':'Andy Robertson',       'impacto_atq':0.12},
+                     {'nombre':'Lyndon Dykes',         'impacto_atq':0.14}],
+    'República Checa':[{'nombre':'Patrik Schick',      'impacto_atq':0.18},
+                       {'nombre':'Tomáš Souček',       'impacto_atq':0.14}],
+    'Bosnia y Herzegovina':[{'nombre':'Edin Džeko',    'impacto_atq':0.22}],
+    'Japón':        [{'nombre':'Kaoru Mitoma',         'impacto_atq':0.18},
+                     {'nombre':'Takumi Minamino',      'impacto_atq':0.14}],
+    'Corea del Sur':[{'nombre':'Son Heung-min',        'impacto_atq':0.26},
+                     {'nombre':'Hwang Hee-chan',       'impacto_atq':0.12}],
+    'Australia':    [{'nombre':'Mathew Leckie',        'impacto_atq':0.16},
+                     {'nombre':'Mitchell Duke',        'impacto_atq':0.12}],
+    'Irán':         [{'nombre':'Mehdi Taremi',         'impacto_atq':0.22}],
+    'Arabia Saudita':[{'nombre':'Salem Al-Dawsari',    'impacto_atq':0.20}],
+    'Uzbekistán':   [{'nombre':'Eldor Shomurodov',     'impacto_atq':0.20}],
+    'Marruecos':    [{'nombre':'Achraf Hakimi',        'impacto_atq':0.16},
+                     {'nombre':'Hakim Ziyech',         'impacto_atq':0.18},
+                     {'nombre':'Youssef En-Nesyri',    'impacto_atq':0.18}],
+    'Senegal':      [{'nombre':'Sadio Mané',           'impacto_atq':0.26}],
+    'Argelia':      [{'nombre':'Riyad Mahrez',         'impacto_atq':0.22}],
+    'Ghana':        [{'nombre':'Jordan Ayew',          'impacto_atq':0.16},
+                     {'nombre':'André Ayew',           'impacto_atq':0.14}],
+    'Costa de Marfil':[{'nombre':'Sébastien Haller',  'impacto_atq':0.18},
+                       {'nombre':'Nicolas Pépé',       'impacto_atq':0.14}],
+    'Egipto':       [{'nombre':'Mohamed Salah',        'impacto_atq':0.32}],
+    'R. D. del Congo':[{'nombre':'Dodi Lukébakio',     'impacto_atq':0.18}],
+    'Sudáfrica':    [{'nombre':'Percy Tau',            'impacto_atq':0.18}],
+    'Túnez':        [{'nombre':'Wahbi Khazri',         'impacto_atq':0.16}],
+    'Cabo Verde':   [{'nombre':'Garry Rodrigues',      'impacto_atq':0.20}],
+    'Jordania':     [{'nombre':'Musa Al-Taamari',      'impacto_atq':0.16}],
+    'Irak':         [{'nombre':'Mohanad Ali',          'impacto_atq':0.16}],
+    'Catar':        [{'nombre':'Almoez Ali',           'impacto_atq':0.16}],
+    'Nueva Zelanda':[{'nombre':'Chris Wood',           'impacto_atq':0.20}],
+    'Curazao':      [{'nombre':'Leandro Bacuna',       'impacto_atq':0.16}],
+    'Haití':        [{'nombre':'Duckens Nazon',        'impacto_atq':0.14}],
+}
+
+def lambdas_adj(local, visita, fecha=None, aus_local=None, aus_visita=None):
+    """Lambda base + descuento por ausencia de estrellas."""
     ll, lv = lambdas(local, visita, fecha=fecha)
+    if aus_local:
+        impacto = sum(j['impacto_atq'] for j in ESTRELLAS.get(local, [])
+                      if j['nombre'] in aus_local)
+        ll *= max(0.55, 1.0 - impacto)
+    if aus_visita:
+        impacto = sum(j['impacto_atq'] for j in ESTRELLAS.get(visita, [])
+                      if j['nombre'] in aus_visita)
+        lv *= max(0.55, 1.0 - impacto)
+    return ll, lv
+
+def calcular_prediccion(local, visita, usar_api=False, fecha=None, aus_local=None, aus_visita=None):
+    ll, lv = (lambdas_adj(local, visita, fecha=fecha,
+                          aus_local=aus_local, aus_visita=aus_visita)
+              if (aus_local or aus_visita)
+              else lambdas(local, visita, fecha=fecha))
     pl, pe, pv, gi, gj, mat = poisson_probs(ll, lv)
 
     if usar_api:
@@ -1166,6 +1267,29 @@ with tab_fix:
         st.markdown(f'<div class="date-hdr">{dt.day} de {MESES[dt.month]}{badge}</div>',
                     unsafe_allow_html=True)
 
+    # ── 🔔 ALERTAS PRÓXIMOS PARTIDOS (≤ 30 min) ──────────────────────
+    from datetime import datetime as _dt, timezone as _tz, timedelta as _td
+    _now = _dt.now(_tz.utc)
+    _r32_tmp = build_r32_bracket()
+    for _mnum, _t1, _t2 in _r32_tmp:
+        if _t1 in (None,"Por confirmar") or _t2 in (None,"Por confirmar"):
+            continue
+        _f32 = FIXTURE_R32[_mnum][0]
+        _ei  = get_espn_fecha(_f32).get((_t1,_t2)) or get_espn_fecha(_f32).get((_t2,_t1))
+        if not _ei or _ei['estado'] != 'por_jugar': continue
+        _hu  = _ei.get('hora_utc','')
+        if not _hu: continue
+        try:
+            _mt  = _dt.fromisoformat(_hu.replace("Z","+00:00"))
+            _dif = (_mt - _now).total_seconds() / 60
+            if 0 < _dif <= 30:
+                _hora_cl = (_mt + _td(hours=UTC_OFFSET)).strftime("%H:%M")
+                st.warning(
+                    f"⚠️ **Faltan {int(_dif)} min** — **{_t1} vs {_t2}** · {_hora_cl} hrs Chile  "
+                    f"· Abre el **Predictor** y cargá las alineaciones antes de que empiece."
+                )
+        except: pass
+
     # ── ⚔️ DIECISEISAVOS DE FINAL — R32 (expanded) ───────────────────
     st.markdown("## ⚔️ Dieciseisavos de Final")
     st.caption("Ronda de 32 · 16 partidos · Cruces calculados desde standings finales de grupos")
@@ -1451,95 +1575,187 @@ with tab_mc:
 with tab_pred:
     st.markdown("### Predice cualquier partido")
 
-    # API Key config
+    # ── API Key ───────────────────────────────────────────────────────
     with st.expander("⚙️ Cuotas reales — The Odds API (opcional)"):
-        st.markdown("""
-        Obtén una API key gratis en **[the-odds-api.com](https://the-odds-api.com)** (500 requests/mes gratuitos).
-        Con la key activa, las cuotas de Betano, bet365, etc. serán **reales** en vez de simuladas.
-        """)
+        st.markdown("Obtén una API key gratis en **[the-odds-api.com](https://the-odds-api.com)** (500 req/mes).")
         key_input = st.text_input("API Key", value=st.session_state.odds_api_key,
                                    type="password", placeholder="abc123...")
         if key_input != st.session_state.odds_api_key:
             st.session_state.odds_api_key = key_input
         usar_api = bool(st.session_state.odds_api_key)
         if usar_api:
-            st.success("✅ API key configurada — se usarán cuotas reales cuando estén disponibles.")
+            st.success("✅ API key configurada.")
             if st.button("🔍 Probar conexión API"):
                 cuotas_test, msg_test = cuotas_reales("Argentina", "Austria")
                 if cuotas_test:
-                    st.success(f"Conexión OK — {len(cuotas_test)} casas disponibles para Argentina vs Austria")
+                    st.success(f"Conexión OK — {len(cuotas_test)} casas")
                 else:
-                    st.warning(f"Respuesta API: {msg_test}")
+                    st.warning(f"Respuesta: {msg_test}")
 
+    # ── Selección de equipos ──────────────────────────────────────────
     equipos = sorted(st.session_state.datos.keys())
-    c1,c2 = st.columns(2)
+    c1, c2 = st.columns(2)
     with c1:
-        local = st.selectbox("🏠 Local", equipos, index=equipos.index("México"), key="sel_local")
+        local = st.selectbox("Local", equipos, index=equipos.index("Argentina"), key="sel_local")
     with c2:
-        opts=[e for e in equipos if e!=local]
-        visita = st.selectbox("✈️ Visita", opts,
-            index=opts.index("Corea del Sur") if "Corea del Sur" in opts else 0,
-            key="sel_visita")
+        opts = [e for e in equipos if e != local]
+        visita = st.selectbox("Visita", opts,
+            index=opts.index("Francia") if "Francia" in opts else 0, key="sel_visita")
 
     aplicar_j3 = st.checkbox("🏁 Aplicar presión de clasificación (3era fecha grupos)", value=False)
-    fecha_pred = "2026-06-24" if aplicar_j3 else None  # activa el factor J3
+    es_ko       = st.checkbox("⚔️ Partido de fase eliminatoria", value=True,
+                               help="Activa nota sobre resultado: cuenta hasta 120 min, penales no incluidos.")
+    fecha_pred  = "2026-06-24" if aplicar_j3 else None
+    match_key   = f"{local}_vs_{visita}"
 
+    if es_ko:
+        st.markdown("""<div style="background:#1a1a2e;border-left:3px solid #fab005;
+          border-radius:6px;padding:8px 12px;font-size:.78rem;color:#a6adc8;margin-bottom:4px">
+          ⚔️ <strong>Fase eliminatoria</strong> — El resultado que predice el modelo es a los 90 min regulares.<br>
+          En esta fase el empate es válido: significa que el partido se definió en alargue (sin gol extra) o penales.<br>
+          Si hubo gol en prórroga (al 120 min), ese marcador también es correcto como resultado final.
+        </div>""", unsafe_allow_html=True)
+
+    # ── ⭐ FACTOR ESTRELLA — alineación ───────────────────────────────
+    st.markdown("---")
+    st.markdown("##### ⭐ Factor Estrella — jugadores clave")
+    st.caption("Marcá los titulares que NO estarán disponibles. El modelo ajustará el lambda ofensivo del equipo.")
+
+    est_local   = ESTRELLAS.get(local, [])
+    est_visita  = ESTRELLAS.get(visita, [])
+    alin_prev   = st.session_state.alineaciones.get(match_key, {'aus_local':[], 'aus_visita':[]})
+
+    col_e1, col_e2 = st.columns(2)
+    aus_local_new, aus_visita_new = [], []
+
+    with col_e1:
+        st.markdown(f"**{local}**")
+        if est_local:
+            for j in est_local:
+                impacto_pct = int(j['impacto_atq']*100)
+                ausente = st.checkbox(
+                    f"{j['nombre']}  ⬇{impacto_pct}% atq",
+                    value=(j['nombre'] in alin_prev['aus_local']),
+                    key=f"aus_loc_{match_key}_{j['nombre']}"
+                )
+                if ausente: aus_local_new.append(j['nombre'])
+        else:
+            st.caption("Sin estrellas definidas")
+
+    with col_e2:
+        st.markdown(f"**{visita}**")
+        if est_visita:
+            for j in est_visita:
+                impacto_pct = int(j['impacto_atq']*100)
+                ausente = st.checkbox(
+                    f"{j['nombre']}  ⬇{impacto_pct}% atq",
+                    value=(j['nombre'] in alin_prev['aus_visita']),
+                    key=f"aus_vis_{match_key}_{j['nombre']}"
+                )
+                if ausente: aus_visita_new.append(j['nombre'])
+        else:
+            st.caption("Sin estrellas definidas")
+
+    # Guardar alineación en session_state en tiempo real
+    st.session_state.alineaciones[match_key] = {
+        'aus_local': aus_local_new,
+        'aus_visita': aus_visita_new,
+    }
+    hay_ajuste = bool(aus_local_new or aus_visita_new)
+
+    # ── Botón predecir ────────────────────────────────────────────────
+    st.markdown("---")
     if st.button("⚡ Predecir", use_container_width=True, type="primary"):
         with st.spinner("Calculando..."):
-            st.session_state.ultima_pred = calcular_prediccion(local, visita, usar_api=usar_api, fecha=fecha_pred)
+            st.session_state.pred_base = calcular_prediccion(
+                local, visita, usar_api=usar_api, fecha=fecha_pred)
+            if hay_ajuste:
+                st.session_state.pred_adj = calcular_prediccion(
+                    local, visita, usar_api=usar_api, fecha=fecha_pred,
+                    aus_local=aus_local_new, aus_visita=aus_visita_new)
+            elif 'pred_adj' in st.session_state:
+                del st.session_state['pred_adj']
+        st.session_state.ultima_pred = st.session_state.pred_base  # compatibilidad
 
-    if 'ultima_pred' in st.session_state:
-        r = st.session_state.ultima_pred
-        loc,vis = r['local'],r['visita']
-        pL,pE,pV = r['prob_l']*100,r['prob_e']*100,r['prob_v']*100
-
+    # ── Helper: renderizar un bloque de predicción ────────────────────
+    def _pred_card(r, titulo, color_titulo="#cba6f7"):
+        loc2, vis2 = r['local'], r['visita']
+        pL, pE, pV = r['prob_l']*100, r['prob_e']*100, r['prob_v']*100
+        top3 = top_marcadores(r['matriz'])
+        top3_html = "  ·  ".join([f"<strong>{a}–{b}</strong> ({p:.1f}%)" for a,b,p in top3])
         st.markdown(f"""<div class="card">
-          <div style="text-align:center;color:#a6adc8;font-size:.8rem;margin-bottom:4px">MARCADOR ESTIMADO</div>
-          <div class="marcador">{loc} {r['goles_l']} – {r['goles_v']} {vis}</div>
-          <div style="text-align:center;color:#6c7086;font-size:.78rem">
-            λ {loc}={r['lam_l']:.2f} · λ {vis}={r['lam_v']:.2f}
-          </div></div>""", unsafe_allow_html=True)
-
-        st.markdown(f"""<div class="card">
-          <div style="color:#a6adc8;font-size:.76rem;margin-bottom:10px">
-            PROBABILIDADES — 60% Poisson · 40% mercado
-            <span style="color:#6c7086;font-size:.72rem"> (cuotas {r['fuente_cuotas']})</span>
+          <div style="color:{color_titulo};font-size:.75rem;font-weight:700;margin-bottom:6px">{titulo}</div>
+          <div style="text-align:center;font-size:2rem;font-weight:800;color:#cba6f7;margin:.3rem 0">
+            {loc2} {r['goles_l']} – {r['goles_v']} {vis2}
+          </div>
+          <div style="text-align:center;color:#6c7086;font-size:.72rem;margin-bottom:10px">
+            λ={r['lam_l']:.2f} · λ={r['lam_v']:.2f}
           </div>
           <div style="display:flex;justify-content:space-between;margin-bottom:2px">
-            <span><span class="tag tag-l">LOCAL</span> &nbsp;{loc}</span>
-            <strong style="color:#69db7c">{pL:.1f}% &nbsp; cuota {1/r['prob_l']:.2f}</strong>
+            <span><span class="tag tag-l">L</span> {loc2}</span>
+            <strong style="color:#69db7c">{pL:.1f}%</strong>
           </div>
           <div class="bar-wrap"><div class="bar" style="width:{pL}%;background:#40c057"></div></div>
           <div style="display:flex;justify-content:space-between;margin-bottom:2px">
-            <span><span class="tag tag-e">EMPATE</span></span>
-            <strong style="color:#ffd43b">{pE:.1f}% &nbsp; cuota {1/r['prob_e']:.2f}</strong>
+            <span><span class="tag tag-e">E</span></span>
+            <strong style="color:#ffd43b">{pE:.1f}%</strong>
           </div>
           <div class="bar-wrap"><div class="bar" style="width:{pE}%;background:#fab005"></div></div>
           <div style="display:flex;justify-content:space-between;margin-bottom:2px">
-            <span><span class="tag tag-v">VISITA</span> &nbsp;{vis}</span>
-            <strong style="color:#ff6b6b">{pV:.1f}% &nbsp; cuota {1/r['prob_v']:.2f}</strong>
+            <span><span class="tag tag-v">V</span> {vis2}</span>
+            <strong style="color:#ff6b6b">{pV:.1f}%</strong>
           </div>
           <div class="bar-wrap"><div class="bar" style="width:{pV}%;background:#fa5252"></div></div>
+          <div style="margin-top:10px;font-size:.78rem;color:#a6adc8">
+            🎯 <strong>Top 3 marcadores</strong><br>{top3_html}
+          </div>
         </div>""", unsafe_allow_html=True)
 
-        with st.expander(f"📋 Cuotas por casa ({r['fuente_cuotas']})"):
-            rows_c = [{'Casa':c,f'Local ({loc})':cL,'Empate':cE,f'Visita ({vis})':cV}
-                      for c,(cL,cE,cV) in r['cuotas'].items()]
+    # ── Resultados ────────────────────────────────────────────────────
+    if 'pred_base' in st.session_state and st.session_state.pred_base['local'] == local:
+        r_base = st.session_state.pred_base
+        r_adj  = st.session_state.get('pred_adj')
+
+        if r_adj:
+            # Mostrar lado a lado: base vs ajustada
+            ausencias_txt = []
+            if aus_local_new:  ausencias_txt.append(f"Sin {', '.join(aus_local_new)}")
+            if aus_visita_new: ausencias_txt.append(f"Sin {', '.join(aus_visita_new)}")
+            col_b, col_a = st.columns(2)
+            with col_b:
+                _pred_card(r_base, "📊 MODELO BASE — sin ajuste", color_titulo="#89b4fa")
+            with col_a:
+                nota = " · ".join(ausencias_txt)
+                _pred_card(r_adj, f"⭐ CON FACTOR ESTRELLA — {nota}", color_titulo="#fab005")
+
+            # Diferencia de lambdas
+            dl = r_adj['lam_l'] - r_base['lam_l']
+            dv = r_adj['lam_v'] - r_base['lam_v']
+            st.markdown(f"""<div class="card" style="padding:10px 14px;margin-top:0">
+              <div style="color:#a6adc8;font-size:.73rem;margin-bottom:4px">IMPACTO DE LAS AUSENCIAS</div>
+              <div style="font-size:.85rem">
+                λ {local}: {r_base['lam_l']:.2f} → {r_adj['lam_l']:.2f}
+                &nbsp;<span style="color:{'#fa5252' if dl<0 else '#69db7c'}">{dl:+.2f}</span>
+                &emsp;|&emsp;
+                λ {visita}: {r_base['lam_v']:.2f} → {r_adj['lam_v']:.2f}
+                &nbsp;<span style="color:{'#fa5252' if dv<0 else '#69db7c'}">{dv:+.2f}</span>
+              </div>
+            </div>""", unsafe_allow_html=True)
+        else:
+            _pred_card(r_base, "📊 PREDICCIÓN — modelo base")
+
+        # Cuotas detalladas (siempre del base)
+        with st.expander(f"📋 Cuotas por casa ({r_base['fuente_cuotas']})"):
+            rows_c = [{'Casa':c, f'L ({local})':cL, 'E':cE, f'V ({visita})':cV}
+                      for c,(cL,cE,cV) in r_base['cuotas'].items()]
             st.dataframe(pd.DataFrame(rows_c).set_index('Casa'), use_container_width=True)
 
-        top3 = top_marcadores(r['matriz'])
-        top3_html = "  ·  ".join([f"<strong>{gl}–{gv}</strong> ({p:.1f}%)" for gl,gv,p in top3])
-        st.markdown(f"""<div class="card" style="padding:12px 16px">
-          <div style="color:#a6adc8;font-size:.75rem;margin-bottom:6px">🎯 MARCADORES MÁS PROBABLES</div>
-          <div style="font-size:.95rem">{top3_html}</div>
-        </div>""", unsafe_allow_html=True)
-
-        with st.expander("🔢 Matriz de marcadores (% probabilidad)"):
+        with st.expander("🔢 Matriz de marcadores base"):
             st.caption("Filas = goles local · Columnas = goles visita")
             df_mat = pd.DataFrame(
-                r['matriz']*100,
-                index=[f"{loc} {i}" for i in range(7)],
-                columns=[f"{vis} {j}" for j in range(7)]
+                r_base['matriz']*100,
+                index=[f"{local} {i}" for i in range(7)],
+                columns=[f"{visita} {j}" for j in range(7)]
             ).round(2)
             st.dataframe(df_mat.style.background_gradient(cmap='Blues'), use_container_width=True)
 
@@ -1550,12 +1766,35 @@ with tab_reg:
     st.markdown("### Registrar resultado real")
     st.caption("El modelo se actualiza automáticamente y mejora las siguientes predicciones.")
 
+    # Regla de resultado según fase
+    with st.expander("📋 ¿Qué resultado debo cargar?", expanded=False):
+        st.markdown("""
+**Fase de grupos** → resultado al final de los 90 min + adicionado. Sin más.
+
+**Fase eliminatoria (dieciseisavos en adelante):**
+- Partido termina en 90 min con diferencia de goles → cargá ese marcador ✅
+- Partido va a alargue (prórroga): terminó empate a 90 min →
+  - Si algún equipo gana en los 30 min extra → cargá el marcador al final del alargue ✅
+  - Si sigue empatado tras 120 min y se va a penales → cargá el **empate** (el marcador a los 120 min, SIN contar los penales) ✅
+
+> **Los penales no se cuentan.** Un empate a los 120 min es un empate para el tracker de precisión aunque luego lo defina un penal.
+        """)
+
+    fase_ko = st.checkbox("⚽ Partido de fase eliminatoria (dieciseisavos en adelante)", value=True)
+
     equipos = sorted(st.session_state.datos.keys())
     c1,c2,c3,c4 = st.columns([3,1,1,3])
     with c1: r_local  = st.selectbox("Local",  equipos, key="reg_local")
     with c2: g_local  = st.number_input("Goles",0,20,0,key="reg_gl")
     with c3: g_visita = st.number_input("Goles",0,20,0,key="reg_gv")
     with c4: r_visita = st.selectbox("Visita",[e for e in equipos if e!=r_local],key="reg_visita")
+
+    if fase_ko:
+        if g_local == g_visita:
+            st.info("ℹ️ Marcador empatado → se registra como **empate** (el partido se fue a penales o no terminó con diferencia).")
+        else:
+            ganador = r_local if g_local > g_visita else r_visita
+            st.info(f"ℹ️ **{ganador}** gana — este resultado puede ser al 90 min o al final del alargue (120 min).")
 
     if st.button("✅ Registrar",use_container_width=True,type="primary"):
         d=st.session_state.datos
