@@ -206,22 +206,24 @@ UTC_OFFSET = -4  # Chile continental en junio/julio (UTC-4)
 # Formato: (fecha_chile, local, visita, goles_local, goles_visita)
 # Dejar local/visita en None mientras no se confirmen equipos
 FIXTURE_R32 = {
-    73: ("2026-06-28", None, None, None, None),
-    74: ("2026-06-28", None, None, None, None),
-    75: ("2026-06-29", None, None, None, None),
-    76: ("2026-06-29", None, None, None, None),
-    77: ("2026-06-30", None, None, None, None),
-    78: ("2026-06-30", None, None, None, None),
-    79: ("2026-07-01", None, None, None, None),
-    80: ("2026-07-01", None, None, None, None),
-    81: ("2026-07-02", None, None, None, None),
-    82: ("2026-07-02", None, None, None, None),
-    83: ("2026-07-03", None, None, None, None),
-    84: ("2026-07-03", None, None, None, None),
-    85: ("2026-07-03", None, None, None, None),
-    86: ("2026-07-04", None, None, None, None),
-    87: ("2026-07-04", None, None, None, None),
-    88: ("2026-07-05", None, None, None, None),
+    # Fuente: FIFA oficial / Wikipedia 2026 FIFA World Cup knockout stage
+    # Fechas en hora Chile (UTC-4)
+    73: ("2026-06-28", "Sudáfrica",           "Canadá",               None, None),  # 15:00
+    74: ("2026-06-29", "Alemania",             "Paraguay",             None, None),  # 16:30
+    75: ("2026-06-29", "Países Bajos",         "Marruecos",            None, None),  # 21:00
+    76: ("2026-06-29", "Brasil",               "Japón",                None, None),  # 13:00
+    77: ("2026-06-30", "Francia",              "Suecia",               None, None),  # 17:00
+    78: ("2026-06-30", "Costa de Marfil",      "Noruega",              None, None),  # 13:00
+    79: ("2026-06-30", "México",               "Ecuador",              None, None),  # 21:00
+    80: ("2026-07-01", "Inglaterra",           "R. D. del Congo",      None, None),  # 12:00
+    81: ("2026-07-01", "Estados Unidos",       "Bosnia y Herzegovina", None, None),  # 20:00
+    82: ("2026-07-01", "Bélgica",              "Senegal",              None, None),  # 16:00
+    83: ("2026-07-02", "Portugal",             "Croacia",              None, None),  # 19:00
+    84: ("2026-07-02", "España",               "Austria",              None, None),  # 15:00
+    85: ("2026-07-02", "Suiza",                "Argelia",              None, None),  # 23:00
+    86: ("2026-07-03", "Argentina",            "Cabo Verde",           None, None),  # 18:00
+    87: ("2026-07-03", "Colombia",             "Ghana",                None, None),  # 21:30
+    88: ("2026-07-03", "Australia",            "Egipto",               None, None),  # 14:00
 }
 # R16 — octavos de final
 FIXTURE_R16 = {
@@ -821,27 +823,31 @@ def build_team_stats():
         for eid, loc, vis in fetch_event_ids(d.strftime("%Y%m%d")):
             stats = fetch_match_stats(eid)
             if not stats or loc not in stats or vis not in stats:
-                d += timedelta(days=1)
-                continue
+                continue  # no avanzar fecha aquí — era el bug original
             for eq, rival in [(loc, vis), (vis, loc)]:
-                if eq not in acum:
-                    acum[eq] = {'sot_for':[], 'sot_against':[], 'poss':[]}
-                acum[eq]['sot_for'].append(stats[eq]['sot'])
-                acum[eq]['sot_against'].append(stats[rival]['sot'])
-                acum[eq]['poss'].append(stats[eq]['poss'])
+                sot_eq = stats[eq]['sot']
+                sot_rv = stats[rival]['sot']
+                # Solo acumular si hay datos reales (sot > 0 en al menos un equipo)
+                if sot_eq > 0 or sot_rv > 0:
+                    if eq not in acum:
+                        acum[eq] = {'sot_for':[], 'sot_against':[], 'poss':[]}
+                    acum[eq]['sot_for'].append(sot_eq)
+                    acum[eq]['sot_against'].append(sot_rv)
+                    acum[eq]['poss'].append(stats[eq]['poss'])
         d += timedelta(days=1)
 
     # Calcular promedios y factor relativo al promedio del torneo
     promedios = {}
     if acum:
-        avg_sot = sum(v for eq in acum for v in acum[eq]['sot_for']) / max(sum(len(acum[eq]['sot_for']) for eq in acum), 1)
+        all_sot = [v for eq in acum for v in acum[eq]['sot_for'] if v > 0]
+        avg_sot = sum(all_sot) / max(len(all_sot), 1) if all_sot else 3.0
         for eq, v in acum.items():
             sot_for  = sum(v['sot_for'])  / max(len(v['sot_for']), 1)
             sot_ag   = sum(v['sot_against']) / max(len(v['sot_against']), 1)
             poss_avg = sum(v['poss']) / max(len(v['poss']), 1)
-            # Factor ataque: más disparos al arco que el promedio → bonus
-            f_atq = (sot_for  / max(avg_sot, 0.1)) ** 0.25  # efecto suavizado
-            f_def = (avg_sot  / max(sot_ag,  0.1)) ** 0.20
+            # Si sot_for=0 (sin datos útiles), factor neutro = 1.0
+            f_atq = (sot_for / avg_sot) ** 0.25 if sot_for > 0 and avg_sot > 0 else 1.0
+            f_def = (avg_sot / sot_ag)  ** 0.20 if sot_ag  > 0 and avg_sot > 0 else 1.0
             promedios[eq] = {
                 'sot_for': round(sot_for, 1),
                 'sot_ag':  round(sot_ag, 1),
