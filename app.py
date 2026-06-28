@@ -145,7 +145,7 @@ FIXTURE_2026 = [
     ("2026-06-17","Ghana","Panama",1,0),
     ("2026-06-18","Canada","Qatar",6,0),
     ("2026-06-18","Switzerland","Bosnia and Herzegovina",4,1),
-    ("2026-06-18","Mexico","South Korea",0,1),
+    ("2026-06-18","Mexico","South Korea",1,0),
     ("2026-06-18","Czech Republic","South Africa",1,1),
     ("2026-06-19","United States","Australia",2,0),
     ("2026-06-19","Turkey","Paraguay",0,1),
