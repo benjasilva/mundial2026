@@ -1214,7 +1214,9 @@ st.markdown("""
 .fixture-score{font-weight:700;font-size:1.05rem;color:#cba6f7;min-width:64px;text-align:center}
 .fixture-pred{font-weight:600;font-size:.82rem;color:#89b4fa;min-width:64px;text-align:center}
 .fixture-team{flex:1}.fixture-team.right{text-align:right}
-.date-hdr{color:#6c7086;font-size:.78rem;margin:10px 0 3px;text-transform:uppercase;letter-spacing:.08em}
+.date-hdr{color:#cba6f7;font-size:.82rem;font-weight:700;letter-spacing:.10em;text-transform:uppercase;
+  margin:22px 0 6px;padding:6px 12px;
+  border-left:3px solid #cba6f7;background:rgba(203,166,247,.07);border-radius:0 6px 6px 0}
 .today-badge{display:inline-block;background:#fab005;color:#1e1e2e;
   padding:1px 8px;border-radius:20px;font-size:.68rem;font-weight:700;margin-left:6px}
 h1{color:#cba6f7!important}h2,h3{color:#89b4fa!important}
