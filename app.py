@@ -196,6 +196,67 @@ FIXTURE_2026 = [
 PROMEDIO_GOL = 1.25
 CASAS = ["Betano","Jugabet","bet365","1xbet","Tonybet","Coolbet","Betsson","Tikitaka"]
 MESES = ["","enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"]
+UTC_OFFSET = -4  # Chile continental en junio/julio (UTC-4)
+
+# =====================================================================
+# FIXTURE FASE ELIMINATORIA
+# Llenar equipos a medida que se confirman; None = por definir
+# =====================================================================
+# R32 — dieciseisavos de final
+# Formato: (fecha_chile, local, visita, goles_local, goles_visita)
+# Dejar local/visita en None mientras no se confirmen equipos
+FIXTURE_R32 = {
+    73: ("2026-06-28", None, None, None, None),
+    74: ("2026-06-28", None, None, None, None),
+    75: ("2026-06-29", None, None, None, None),
+    76: ("2026-06-29", None, None, None, None),
+    77: ("2026-06-30", None, None, None, None),
+    78: ("2026-06-30", None, None, None, None),
+    79: ("2026-07-01", None, None, None, None),
+    80: ("2026-07-01", None, None, None, None),
+    81: ("2026-07-02", None, None, None, None),
+    82: ("2026-07-02", None, None, None, None),
+    83: ("2026-07-03", None, None, None, None),
+    84: ("2026-07-03", None, None, None, None),
+    85: ("2026-07-03", None, None, None, None),
+    86: ("2026-07-04", None, None, None, None),
+    87: ("2026-07-04", None, None, None, None),
+    88: ("2026-07-05", None, None, None, None),
+}
+# R16 — octavos de final
+FIXTURE_R16 = {
+    89:  ("2026-07-06", None, None, None, None),
+    90:  ("2026-07-06", None, None, None, None),
+    91:  ("2026-07-07", None, None, None, None),
+    92:  ("2026-07-07", None, None, None, None),
+    93:  ("2026-07-08", None, None, None, None),
+    94:  ("2026-07-08", None, None, None, None),
+    95:  ("2026-07-09", None, None, None, None),
+    96:  ("2026-07-09", None, None, None, None),
+}
+# QF — cuartos de final
+FIXTURE_QF = {
+    97:  ("2026-07-11", None, None, None, None),
+    98:  ("2026-07-11", None, None, None, None),
+    99:  ("2026-07-12", None, None, None, None),
+    100: ("2026-07-12", None, None, None, None),
+}
+# SF — semifinales
+FIXTURE_SF = {
+    101: ("2026-07-14", None, None, None, None),
+    102: ("2026-07-15", None, None, None, None),
+}
+# Final
+FIXTURE_FINAL = {
+    103: ("2026-07-19", None, None, None, None),
+}
+
+# Bracket de R16/QF/SF/Final (qué partidos enfrentan ganadores de qué matches)
+BRACKET_R16_LABELS = [(89,"M73","M74"),(90,"M75","M76"),(91,"M77","M78"),(92,"M79","M80"),
+                      (93,"M81","M82"),(94,"M83","M84"),(95,"M85","M86"),(96,"M87","M88")]
+BRACKET_QF_LABELS  = [(97,"M89","M90"),(98,"M91","M92"),(99,"M93","M94"),(100,"M95","M96")]
+BRACKET_SF_LABELS  = [(101,"M97","M98"),(102,"M99","M100")]
+BRACKET_F_LABEL    = [(103,"M101","M102")]
 
 # =====================================================================
 # BRACKET OFICIAL R32 — Copa Mundial 2026
@@ -902,6 +963,129 @@ def monte_carlo(n_sims, _datos_hash):
     return {eq:{k:v/n_sims*100 for k,v in rnd.items()} for eq,rnd in counts.items()}
 
 # =====================================================================
+# BRACKET R32 — armar cruces desde standings actuales
+# =====================================================================
+def build_r32_bracket():
+    """Devuelve lista de (match_num, equipo1, equipo2) usando standings reales."""
+    W, R2 = {}, {}
+    terceros = []
+    for letra in GRUPOS:
+        orden, tab = tabla_grupo(letra)
+        W[letra]  = orden[0] if orden          else "Por confirmar"
+        R2[letra] = orden[1] if len(orden) > 1 else "Por confirmar"
+        if len(orden) >= 3:
+            t3 = orden[2]; v = tab[t3]
+            terceros.append((t3, letra, v['Pts'], v['GF']-v['GC'], v['GF']))
+    terceros.sort(key=lambda x: (x[2], x[3], x[4]), reverse=True)
+    top8 = terceros[:8]; usados = set()
+
+    def get_t(gv):
+        for eq, gr, *_ in top8:
+            if gr in gv and eq not in usados: usados.add(eq); return eq
+        for eq, gr, *_ in top8:
+            if eq not in usados: usados.add(eq); return eq
+        return "Por confirmar"
+
+    result = []
+    for mnum, pos1, g1, pos2, g2, tg in BRACKET_R32:
+        t1 = W[g1] if pos1 == 'W' else R2[g1]
+        t2 = get_t(tg) if pos2 == 'T' else (W[g2] if pos2 == 'W' else R2[g2])
+        result.append((mnum, t1, t2))
+    return result
+
+# =====================================================================
+# HELPERS DE RENDERIZADO — reutilizables en todas las rondas
+# =====================================================================
+def _hora_badge_html(espn_info):
+    """Genera el badge HTML de hora en Chile desde el campo hora_utc de ESPN."""
+    hora_str = ""
+    if espn_info and espn_info.get('hora_utc'):
+        try:
+            from datetime import datetime, timedelta as td
+            utc_dt = datetime.fromisoformat(espn_info['hora_utc'].replace("Z", "+00:00"))
+            hora_str = (utc_dt + td(hours=UTC_OFFSET)).strftime("%H:%M")
+        except: pass
+    luna = ""
+    if hora_str:
+        try:
+            if int(hora_str[:2]) >= 23 or int(hora_str[:2]) < 6:
+                luna = ' <span title="Madrugada" style="font-size:.75rem">🌙</span>'
+        except: pass
+    return (f'<span style="color:#6c7086;font-size:.72rem;min-width:42px;display:inline-block">{hora_str}{luna}</span>'
+            if hora_str else '<span style="min-width:42px;display:inline-block"></span>')
+
+def _render_match_row(local, visita, fecha, gl=None, gv=None, espn_info=None):
+    """
+    Renderiza una fila de partido con resultado real, estado en vivo o predicción.
+    Usado en todas las rondas (grupos y eliminatoria).
+    """
+    hb = _hora_badge_html(espn_info)
+    por_confirmar = local in (None, "Por confirmar") or visita in (None, "Por confirmar")
+
+    if por_confirmar:
+        loc_lbl = local  or "Por confirmar"
+        vis_lbl = visita or "Por confirmar"
+        st.markdown(f"""<div class="fixture-row" style="opacity:.42">
+          {hb}<span class="fixture-team">{loc_lbl}</span>
+          <span class="fixture-pred">?</span>
+          <span class="fixture-team right">{vis_lbl}</span>
+          <span style="color:#6c7086;font-size:.72rem;margin-left:8px">⏳ Por definir</span>
+          </div>""", unsafe_allow_html=True)
+        return
+
+    # Resultado hardcodeado
+    if gl is not None:
+        st.markdown(f"""<div class="fixture-row">
+          {hb}<span class="fixture-team">{local}</span>
+          <span class="fixture-score">{gl} – {gv}</span>
+          <span class="fixture-team right">{visita}</span>
+          <span style="color:#6c7086;font-size:.72rem;margin-left:8px">✅ Final</span>
+          </div>""", unsafe_allow_html=True)
+        return
+
+    # Resultado ESPN (final)
+    if espn_info and espn_info['estado'] == 'final':
+        g1e, g2e = espn_info['gl'], espn_info['gv']
+        st.markdown(f"""<div class="fixture-row">
+          {hb}<span class="fixture-team">{local}</span>
+          <span class="fixture-score">{g1e} – {g2e}</span>
+          <span class="fixture-team right">{visita}</span>
+          <span style="color:#6c7086;font-size:.72rem;margin-left:8px">✅ Final</span>
+          </div>""", unsafe_allow_html=True)
+        return
+
+    # En juego
+    if espn_info and espn_info['estado'] == 'en_juego':
+        g1e, g2e = espn_info['gl'], espn_info['gv']
+        min_txt = f" {espn_info['minuto']}" if espn_info['minuto'] else ""
+        st.markdown(f"""<div class="fixture-row" style="border-color:#fa5252">
+          {hb}<span class="fixture-team">{local}</span>
+          <span class="fixture-score" style="color:#fa5252">{g1e} – {g2e}</span>
+          <span class="fixture-team right">{visita}</span>
+          <span style="color:#fa5252;font-size:.72rem;margin-left:8px">🔴 En juego{min_txt}</span>
+          </div>""", unsafe_allow_html=True)
+        return
+
+    # Predicción
+    if local in st.session_state.datos and visita in st.session_state.datos:
+        r = calcular_prediccion(local, visita, fecha=fecha)
+        pl, pe, pv = r['prob_l']*100, r['prob_e']*100, r['prob_v']*100
+        if pl > pv and pl > pe:   fav = f"▶ {local} ({pl:.0f}%)"
+        elif pv > pl and pv > pe: fav = f"▶ {visita} ({pv:.0f}%)"
+        else:                      fav = f"▶ Empate ({pe:.0f}%)"
+        top3 = top_marcadores(r['matriz'])
+        alt_txt = "  ".join([f"{a}–{b} <span style='color:#6c7086'>({p:.1f}%)</span>" for a,b,p in top3])
+        st.markdown(f"""<div class="fixture-row">
+          {hb}<span class="fixture-team">{local}</span>
+          <span class="fixture-pred" title="{fav}">~ {r['goles_l']}–{r['goles_v']} ~</span>
+          <span class="fixture-team right">{visita}</span>
+          <span style="color:#6c7086;font-size:.72rem;margin-left:8px">🕐 Por jugar</span>
+          </div>
+          <div style="font-size:.70rem;color:#a6adc8;padding:2px 8px 6px 52px">
+            Más probables: {alt_txt}
+          </div>""", unsafe_allow_html=True)
+
+# =====================================================================
 # CSS
 # =====================================================================
 st.markdown("""
@@ -946,8 +1130,8 @@ tab_fix, tab_grupos, tab_mc, tab_pred, tab_reg, tab_stats = st.tabs([
 with tab_fix:
     col_h1, col_h2 = st.columns([3,1])
     with col_h1:
-        st.markdown("### Fase de grupos — 72 partidos")
-        st.caption("Resultados reales cargados automáticamente desde ESPN.")
+        st.markdown("### Fixture — Copa Mundial 2026")
+        st.caption("Resultados en tiempo real · Predicciones para partidos por jugar · Hora Chile (UTC-4)")
     with col_h2:
         if st.button("🔄 Actualizar resultados", use_container_width=True):
             st.session_state.espn_fetched = False
@@ -956,149 +1140,172 @@ with tab_fix:
             if 'mc_result' in st.session_state: del st.session_state['mc_result']
             st.rerun()
 
-    hoy = date.today().isoformat()
+    hoy_str = date.today().isoformat()
     extra_lkp = {(r['local'],r['visita']):(r['gl'],r['gv']) for r in st.session_state.resultados_extra}
 
-# Caché de estados ESPN por fecha (también busca en día siguiente UTC para partidos nocturnos)
     _espn_cache = {}
     def get_espn_fecha(f):
         if f not in _espn_cache:
             from datetime import datetime, timedelta as td
             d = datetime.strptime(f, "%Y-%m-%d")
-            dia_actual  = dict(fetch_espn_estado(d.strftime("%Y%m%d")))
-            dia_sig     = fetch_espn_estado((d + td(days=1)).strftime("%Y%m%d"))
-            # Fusionar: solo incluir del día siguiente los partidos que son antes de 06:00 UTC
-            # (= antes de 02:00 Chile, misma jornada nocturna)
-            for k, v in dia_sig.items():
+            dia_actual = dict(fetch_espn_estado(d.strftime("%Y%m%d")))
+            for k, v in fetch_espn_estado((d + td(days=1)).strftime("%Y%m%d")).items():
                 hora_utc = v.get('hora_utc','')
                 if hora_utc:
                     try:
                         hora = datetime.fromisoformat(hora_utc.replace("Z","+00:00"))
-                        if hora.hour < 6:  # antes de 06:00 UTC = antes de 02:00 Chile
+                        if hora.hour < 6:
                             dia_actual.setdefault(k, v)
                     except: pass
             _espn_cache[f] = dia_actual
         return _espn_cache[f]
 
-    # Agrupar fixture por fecha, ordenado por hora ESPN si disponible
-    from itertools import groupby
-    fixture_por_fecha = {}
-    for item in FIXTURE_2026:
-        fixture_por_fecha.setdefault(item[0], []).append(item)
-
-    UTC_OFFSET = -4  # Chile en junio (UTC-4)
-
-    for fecha in sorted(fixture_por_fecha.keys()):
-        partidos_dia = fixture_por_fecha[fecha]
-        estados_dia = get_espn_fecha(fecha)
-
-        # Ordenar por hora ESPN si hay datos
-        def sort_key(item):
-            loc, vis = t(item[1]), t(item[2])
-            info = estados_dia.get((loc,vis))
-            return info['orden'] if info else 999
-
-        partidos_dia = sorted(partidos_dia, key=sort_key)
-
+    def _date_header(fecha):
         dt = pd.to_datetime(fecha)
-        badge = '<span class="today-badge">HOY</span>' if fecha==hoy else ""
+        badge = '<span class="today-badge">HOY</span>' if fecha == hoy_str else ""
         st.markdown(f'<div class="date-hdr">{dt.day} de {MESES[dt.month]}{badge}</div>',
                     unsafe_allow_html=True)
 
-        for _fecha,local_en,visita_en,gl,gv in partidos_dia:
-            local,visita = t(local_en),t(visita_en)
-            if (local,visita) in extra_lkp: gl,gv = extra_lkp[(local,visita)]
-            espn_info = estados_dia.get((local,visita))
+    # ── ⚔️ DIECISEISAVOS DE FINAL — R32 (expanded) ───────────────────
+    st.markdown("## ⚔️ Dieciseisavos de Final")
+    st.caption("Ronda de 32 · 16 partidos · Cruces calculados desde standings finales de grupos")
 
-            # Hora local Chile (UTC-4)
-            hora_str = ""
-            if espn_info and espn_info.get('hora_utc'):
-                try:
-                    from datetime import datetime, timedelta as td
-                    utc_dt = datetime.fromisoformat(espn_info['hora_utc'].replace("Z","+00:00"))
-                    local_dt = utc_dt + td(hours=UTC_OFFSET)
-                    hora_str = local_dt.strftime("%H:%M")
-                except: pass
+    r32_bracket = build_r32_bracket()
+    # Sobreescribir equipos con cualquier dato manual en FIXTURE_R32
+    r32_map = {mnum: (loc, vis, gl, gv)
+               for mnum, (_, loc, vis, gl, gv) in FIXTURE_R32.items()
+               if loc is not None}
 
-            # Badge de medianoche si arranca entre 23:00 y 05:59 hora Chile
-            luna = ""
-            if hora_str:
-                try:
-                    h = int(hora_str.split(":")[0])
-                    if h >= 23 or h < 6:
-                        luna = ' <span title="Partido de madrugada" style="font-size:.75rem">🌙</span>'
-                except: pass
-            hora_badge = (f'<span style="color:#6c7086;font-size:.72rem;min-width:42px;display:inline-block">{hora_str}{luna}</span>'
-                          if hora_str else '<span style="min-width:42px;display:inline-block"></span>')
+    # Agrupar por fecha
+    r32_por_fecha = {}
+    for mnum, t1, t2 in r32_bracket:
+        fecha_r32 = FIXTURE_R32[mnum][0]
+        # Resultado manual tiene precedencia
+        if mnum in r32_map:
+            loc_m, vis_m, gl_m, gv_m = r32_map[mnum]
+            r32_por_fecha.setdefault(fecha_r32, []).append((mnum, loc_m, vis_m, gl_m, gv_m))
+        else:
+            r32_por_fecha.setdefault(fecha_r32, []).append((mnum, t1, t2, None, None))
 
-            if gl is not None:
-                st.markdown(f"""<div class="fixture-row">
-                  {hora_badge}
-                  <span class="fixture-team">{local}</span>
-                  <span class="fixture-score">{gl} – {gv}</span>
-                  <span class="fixture-team right">{visita}</span>
-                  <span style="color:#6c7086;font-size:.72rem;margin-left:8px">✅ Final</span>
-                  </div>""", unsafe_allow_html=True)
+    for fecha in sorted(r32_por_fecha.keys()):
+        _date_header(fecha)
+        estados_dia = get_espn_fecha(fecha)
+        for mnum, t1, t2, gl, gv in r32_por_fecha[fecha]:
+            # Buscar resultado en extra_lkp
+            if gl is None: gl, gv = extra_lkp.get((t1, t2), (None, None))
+            espn_info = estados_dia.get((t1, t2)) or (estados_dia.get((t2, t1)) if t2 else None)
+            lbl = f'<span style="color:#6c7086;font-size:.68rem;min-width:28px;display:inline-block">M{mnum}</span>'
+            st.markdown(lbl, unsafe_allow_html=True)
+            _render_match_row(t1, t2, fecha, gl=gl, gv=gv, espn_info=espn_info)
 
-            elif espn_info and espn_info['estado']=='final':
-                gl_e, gv_e = espn_info['gl'], espn_info['gv']
-                st.markdown(f"""<div class="fixture-row">
-                  {hora_badge}
-                  <span class="fixture-team">{local}</span>
-                  <span class="fixture-score">{gl_e} – {gv_e}</span>
-                  <span class="fixture-team right">{visita}</span>
-                  <span style="color:#6c7086;font-size:.72rem;margin-left:8px">✅ Final</span>
-                  </div>""", unsafe_allow_html=True)
+    st.markdown("---")
 
-            elif espn_info and espn_info['estado']=='en_juego':
-                gl_e, gv_e = espn_info['gl'], espn_info['gv']
-                min_txt = f" {espn_info['minuto']}" if espn_info['minuto'] else ""
-                st.markdown(f"""<div class="fixture-row" style="border-color:#fa5252">
-                  {hora_badge}
-                  <span class="fixture-team">{local}</span>
-                  <span class="fixture-score" style="color:#fa5252">{gl_e} – {gv_e}</span>
-                  <span class="fixture-team right">{visita}</span>
-                  <span style="color:#fa5252;font-size:.72rem;margin-left:8px">🔴 En juego{min_txt}</span>
-                  </div>""", unsafe_allow_html=True)
+    # ── 🔵 OCTAVOS DE FINAL — R16 ────────────────────────────────────
+    with st.expander("🔵 Octavos de Final — 8 partidos  ·  ~6–9 jul", expanded=False):
+        st.caption("Ganadores de los dieciseisavos. Equipos se confirman a medida que avance el torneo.")
+        r16_por_fecha = {}
+        for mnum, lbl1, lbl2 in BRACKET_R16_LABELS:
+            fecha_r16, loc_m, vis_m, gl_m, gv_m = FIXTURE_R16[mnum]
+            t1 = loc_m or f"Gan. {lbl1}"
+            t2 = vis_m or f"Gan. {lbl2}"
+            # si hay resultado en extra_lkp (cuando teams ya son reales)
+            gl_r, gv_r = extra_lkp.get((t1, t2), (gl_m, gv_m))
+            r16_por_fecha.setdefault(fecha_r16, []).append((mnum, t1, t2, gl_r, gv_r))
+        for fecha in sorted(r16_por_fecha.keys()):
+            _date_header(fecha)
+            estados_dia = get_espn_fecha(fecha)
+            for mnum, t1, t2, gl, gv in r16_por_fecha[fecha]:
+                espn_info = estados_dia.get((t1,t2)) or estados_dia.get((t2,t1))
+                st.markdown(f'<span style="color:#6c7086;font-size:.68rem;min-width:28px;display:inline-block">M{mnum}</span>', unsafe_allow_html=True)
+                _render_match_row(t1, t2, fecha, gl=gl, gv=gv, espn_info=espn_info)
 
-            elif local in st.session_state.datos and visita in st.session_state.datos:
-                r = calcular_prediccion(local, visita, fecha=fecha)
-                if r['prob_l']>r['prob_v'] and r['prob_l']>r['prob_e']:
-                    fav=f"▶ {local} ({r['prob_l']*100:.0f}%)"
-                elif r['prob_v']>r['prob_l'] and r['prob_v']>r['prob_e']:
-                    fav=f"▶ {visita} ({r['prob_v']*100:.0f}%)"
-                else:
-                    fav=f"▶ Empate ({r['prob_e']*100:.0f}%)"
-                estado_badge = '<span style="color:#6c7086;font-size:.72rem;margin-left:8px">🕐 Por jugar</span>'
-                top3 = top_marcadores(r['matriz'])
-                alt_txt = "  ".join([f"{gl}–{gv} <span style='color:#6c7086'>({p:.1f}%)</span>" for gl,gv,p in top3])
+    # ── 🟣 CUARTOS DE FINAL — QF ──────────────────────────────────────
+    with st.expander("🟣 Cuartos de Final — 4 partidos  ·  ~11–12 jul", expanded=False):
+        st.caption("Ganadores de los octavos.")
+        qf_por_fecha = {}
+        for mnum, lbl1, lbl2 in BRACKET_QF_LABELS:
+            fecha_qf, loc_m, vis_m, gl_m, gv_m = FIXTURE_QF[mnum]
+            t1 = loc_m or f"Gan. {lbl1}"
+            t2 = vis_m or f"Gan. {lbl2}"
+            gl_r, gv_r = extra_lkp.get((t1, t2), (gl_m, gv_m))
+            qf_por_fecha.setdefault(fecha_qf, []).append((mnum, t1, t2, gl_r, gv_r))
+        for fecha in sorted(qf_por_fecha.keys()):
+            _date_header(fecha)
+            estados_dia = get_espn_fecha(fecha)
+            for mnum, t1, t2, gl, gv in qf_por_fecha[fecha]:
+                espn_info = estados_dia.get((t1,t2)) or estados_dia.get((t2,t1))
+                st.markdown(f'<span style="color:#6c7086;font-size:.68rem;min-width:28px;display:inline-block">M{mnum}</span>', unsafe_allow_html=True)
+                _render_match_row(t1, t2, fecha, gl=gl, gv=gv, espn_info=espn_info)
 
-                # Badge urgencia J3
+    # ── 🔴 SEMIFINALES ────────────────────────────────────────────────
+    with st.expander("🔴 Semifinales — 2 partidos  ·  ~14–15 jul", expanded=False):
+        for mnum, lbl1, lbl2 in BRACKET_SF_LABELS:
+            fecha_sf, loc_m, vis_m, gl_m, gv_m = FIXTURE_SF[mnum]
+            t1 = loc_m or f"Gan. {lbl1}"
+            t2 = vis_m or f"Gan. {lbl2}"
+            gl_r, gv_r = extra_lkp.get((t1, t2), (gl_m, gv_m))
+            estados_dia = get_espn_fecha(fecha_sf)
+            espn_info = estados_dia.get((t1,t2)) or estados_dia.get((t2,t1))
+            _date_header(fecha_sf)
+            st.markdown(f'<span style="color:#6c7086;font-size:.68rem;min-width:28px;display:inline-block">M{mnum}</span>', unsafe_allow_html=True)
+            _render_match_row(t1, t2, fecha_sf, gl=gl_r, gv=gv_r, espn_info=espn_info)
+
+    # ── 🏆 FINAL ─────────────────────────────────────────────────────
+    with st.expander("🏆 Final — 19 julio 2026 · MetLife Stadium, Nueva Jersey", expanded=False):
+        mnum, lbl1, lbl2 = BRACKET_F_LABEL[0]
+        fecha_f, loc_m, vis_m, gl_m, gv_m = FIXTURE_FINAL[mnum]
+        t1 = loc_m or f"Gan. {lbl1}"
+        t2 = vis_m or f"Gan. {lbl2}"
+        gl_r, gv_r = extra_lkp.get((t1, t2), (gl_m, gv_m))
+        estados_dia = get_espn_fecha(fecha_f)
+        espn_info = estados_dia.get((t1,t2)) or estados_dia.get((t2,t1))
+        _date_header(fecha_f)
+        _render_match_row(t1, t2, fecha_f, gl=gl_r, gv=gv_r, espn_info=espn_info)
+
+    st.markdown("---")
+
+    # ── 📋 FASE DE GRUPOS (colapsada) ────────────────────────────────
+    with st.expander("📋 Fase de Grupos — 72 partidos  ·  11–27 jun", expanded=False):
+        fixture_por_fecha = {}
+        for item in FIXTURE_2026:
+            fixture_por_fecha.setdefault(item[0], []).append(item)
+
+        for fecha in sorted(fixture_por_fecha.keys()):
+            partidos_dia = fixture_por_fecha[fecha]
+            estados_dia  = get_espn_fecha(fecha)
+
+            def sort_key(item):
+                loc, vis = t(item[1]), t(item[2])
+                info = estados_dia.get((loc, vis))
+                return info['orden'] if info else 999
+            partidos_dia = sorted(partidos_dia, key=sort_key)
+
+            _date_header(fecha)
+
+            for _fecha, local_en, visita_en, gl, gv in partidos_dia:
+                local, visita = t(local_en), t(visita_en)
+                if (local, visita) in extra_lkp: gl, gv = extra_lkp[(local, visita)]
+                espn_info = estados_dia.get((local, visita))
+
+                # Badge urgencia J3 (debajo de la fila de predicción)
                 urgencia_txt = ""
-                if fecha in FECHAS_J3:
+                if _fecha in FECHAS_J3:
                     def _urg_label(eq):
                         grp = EQUIPO_GRUPO.get(eq)
                         if not grp: return ""
                         fa, _ = factor_urgencia(eq, grp)
                         if fa >= 1.14:   return f"🔥 {eq} necesita ganar"
-                        elif fa >= 1.05: return f"⚡ {eq} necesita al menos empatar"
+                        elif fa >= 1.05: return f"⚡ {eq} necesita empatar"
                         elif fa <= 0.93: return f"💤 {eq} sin opciones"
                         else:            return f"✅ {eq} clasificado"
                     ul = _urg_label(local); uv = _urg_label(visita)
                     partes = [x for x in [ul, uv] if x]
                     if partes:
-                        urgencia_txt = f'<div style="font-size:.68rem;color:#fab005;padding:0 8px 2px 52px">{" · ".join(partes)}</div>'
+                        urgencia_txt = f'<div style="font-size:.68rem;color:#fab005;padding:0 8px 4px 52px">{" · ".join(partes)}</div>'
 
-                st.markdown(f"""<div class="fixture-row">
-                  {hora_badge}
-                  <span class="fixture-team">{local}</span>
-                  <span class="fixture-pred" title="{fav}">~ {r['goles_l']}–{r['goles_v']} ~</span>
-                  <span class="fixture-team right">{visita}</span>{estado_badge}
-                  </div>
-                  {urgencia_txt}
-                  <div style="font-size:.70rem;color:#a6adc8;padding:2px 8px 6px 52px">
-                    Más probables: {alt_txt}
-                  </div>""", unsafe_allow_html=True)
+                _render_match_row(local, visita, _fecha, gl=gl, gv=gv, espn_info=espn_info)
+                if urgencia_txt:
+                    st.markdown(urgencia_txt, unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────────────────
 # ─────────────────────────────────────────────────────────────────────
