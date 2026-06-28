@@ -1058,6 +1058,8 @@ with tab_grupos:
                 'DG': dg,
             })
 
+    # Criterio oficial FIFA 2026: Pts → DG → GF → Fair Play → Ranking FIFA
+    # (Fair Play y Ranking FIFA no disponibles automáticamente — desempate manual si aplica)
     terceros_ord = sorted(terceros, key=lambda x: (x['Pts'], x['DG'], x['GF']), reverse=True)
 
     rows_t = []
@@ -1078,6 +1080,8 @@ with tab_grupos:
 
     df_t = pd.DataFrame(rows_t).set_index('Pos')
     st.dataframe(df_t, use_container_width=True, hide_index=False)
+    st.caption("Desempate oficial FIFA 2026: Pts → DG → GF → Fair Play (tarjetas) → Ranking FIFA. "
+               "Los últimos dos criterios requieren datos manuales — si hay empate en GF, verificar manualmente.")
 
 # TAB 3: MONTE CARLO
 # ─────────────────────────────────────────────────────────────────────
