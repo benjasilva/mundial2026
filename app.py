@@ -208,13 +208,13 @@ UTC_OFFSET = -4  # Chile continental en junio/julio (UTC-4)
 FIXTURE_R32 = {
     # Fuente: FIFA oficial / Wikipedia 2026 FIFA World Cup knockout stage
     # Fechas en hora Chile (UTC-4)
-    73: ("2026-06-28", "Sudáfrica",           "Canadá",               0,    1),     # 15:00 → Canadá 1-0
-    74: ("2026-06-29", "Alemania",             "Paraguay",             1,    1),     # 16:30 → 1-1 (pen: Paraguay 4-3)
-    75: ("2026-06-29", "Países Bajos",         "Marruecos",            1,    1),     # 21:00 → 1-1 (pen: Marruecos 3-2)
-    76: ("2026-06-29", "Brasil",               "Japón",                2,    1),     # 13:00 → Brasil 2-1
-    77: ("2026-06-30", "Francia",              "Suecia",               None, None),  # 17:00
-    78: ("2026-06-30", "Costa de Marfil",      "Noruega",              None, None),  # 13:00
-    79: ("2026-06-30", "México",               "Ecuador",              None, None),  # 21:00
+    73: ("2026-06-28", "Sudáfrica",           "Canadá",               0,    1),     # → Canadá 1-0
+    74: ("2026-06-29", "Ecuador",             "Alemania",             2,    1),     # → Ecuador 2-1 (Forza)
+    75: ("2026-06-29", "Países Bajos",        "Marruecos",            1,    1),     # → 1-1 (pen: Marruecos 3-2)
+    76: ("2026-06-29", "Brasil",              "Francia",              None, None),  # → pendiente confirmar rival
+    77: ("2026-06-30", "Japón",               "Suecia",               1,    1),     # → 1-1 TC (Forza)
+    78: ("2026-06-30", "Costa de Marfil",     "Noruega",              None, None),  # en curso (Forza)
+    79: ("2026-06-30", "México",              "Chequia",              3,    0),     # → México 3-0 en curso (Forza)
     80: ("2026-07-01", "Inglaterra",           "R. D. del Congo",      None, None),  # 12:00
     81: ("2026-07-01", "Estados Unidos",       "Bosnia y Herzegovina", None, None),  # 20:00
     82: ("2026-07-01", "Bélgica",              "Senegal",              None, None),  # 16:00
@@ -704,18 +704,18 @@ ONCE_TITULAR = {
     {'nombre':'Cucho Hernández',   'pos':'DEL','impacto_atq':0.12},
     {'nombre':'Rafael Santos Borré','pos':'DEL','impacto_atq':0.10},
  ]},
- 'Costa de Marfil': {'formacion':'4-3-3','jugadores':[
-    {'nombre':'Yahia Fofana',      'pos':'POR','impacto_atq':0.01},
-    {'nombre':'Wilfried Singo',    'pos':'DEF','impacto_atq':0.07},  # Aurier no nominado
-    {'nombre':'Evan Ndicka',       'pos':'DEF','impacto_atq':0.04},
-    {'nombre':'Odilon Kossounou',  'pos':'DEF','impacto_atq':0.04},
-    {'nombre':'Ghislain Konan',    'pos':'DEF','impacto_atq':0.06},
-    {'nombre':'Franck Kessié',     'pos':'MED','impacto_atq':0.08},
-    {'nombre':'Seko Fofana',       'pos':'MED','impacto_atq':0.10},
-    {'nombre':'Ibrahim Sangaré',   'pos':'MED','impacto_atq':0.07},
-    {'nombre':'Nicolas Pépé',      'pos':'DEL','impacto_atq':0.14},
-    {'nombre':'Evann Guessand',    'pos':'DEL','impacto_atq':0.16},  # Haller no nominado
-    {'nombre':'Simon Adingra',     'pos':'DEL','impacto_atq':0.10},
+ 'Costa de Marfil': {'formacion':'4-3-3','jugadores':[  # Forza: XI vs Noruega R32
+    {'nombre':'Yahia Fofana',      'pos':'POR','impacto_atq':0.01},  # #1
+    {'nombre':'Doué',              'pos':'DEF','impacto_atq':0.06},  # #17 Guela Doué RB
+    {'nombre':'Emmanuel Agbadou',  'pos':'DEF','impacto_atq':0.04},  # #20
+    {'nombre':'Odilon Kossounou',  'pos':'DEF','impacto_atq':0.04},  # #7
+    {'nombre':'Ghislain Konan',    'pos':'DEF','impacto_atq':0.06},  # #3
+    {'nombre':'Christ Inao Oulaï', 'pos':'MED','impacto_atq':0.07},  # #26
+    {'nombre':'Franck Kessié',     'pos':'MED','impacto_atq':0.08},  # #8
+    {'nombre':'Ibrahim Sangaré',   'pos':'MED','impacto_atq':0.07},  # #18
+    {'nombre':'Nicolas Pépé',      'pos':'DEL','impacto_atq':0.14},  # #19
+    {'nombre':'Yoan-Ange Bonny',   'pos':'DEL','impacto_atq':0.14},  # #9 (titular real)
+    {'nombre':'Yan Diomande',      'pos':'DEL','impacto_atq':0.14},  # #11
  ]},
  'Croacia': {'formacion':'4-2-3-1','jugadores':[
     {'nombre':'Dominik Livaković', 'pos':'POR','impacto_atq':0.01},
@@ -730,18 +730,18 @@ ONCE_TITULAR = {
     {'nombre':'Andrej Kramarić',   'pos':'DEL','impacto_atq':0.14},
     {'nombre':'Bruno Petković',    'pos':'DEL','impacto_atq':0.08},
  ]},
- 'Ecuador': {'formacion':'4-3-3','jugadores':[
-    {'nombre':'Hernán Galíndez',   'pos':'POR','impacto_atq':0.01},
-    {'nombre':'Ángelo Preciado',   'pos':'DEF','impacto_atq':0.06},
-    {'nombre':'Piero Hincapié',    'pos':'DEF','impacto_atq':0.05},
-    {'nombre':'William Pacho',     'pos':'DEF','impacto_atq':0.04},
-    {'nombre':'Pervis Estupiñán',  'pos':'DEF','impacto_atq':0.07},
-    {'nombre':'Carlos Gruezo',     'pos':'MED','impacto_atq':0.07},
-    {'nombre':'Moisés Caicedo',    'pos':'MED','impacto_atq':0.12},
-    {'nombre':'Kendry Páez',       'pos':'MED','impacto_atq':0.10},
-    {'nombre':'Enner Valencia',    'pos':'DEL','impacto_atq':0.20},
-    {'nombre':'Gonzalo Plata',     'pos':'DEL','impacto_atq':0.10},
-    {'nombre':'Jeremy Sarmiento',  'pos':'DEL','impacto_atq':0.10},
+ 'Ecuador': {'formacion':'4-4-2','jugadores':[  # Forza: XI vs Alemania R32
+    {'nombre':'Hernán Galíndez',   'pos':'POR','impacto_atq':0.01},  # #1
+    {'nombre':'Franco',            'pos':'DEF','impacto_atq':0.06},  # #21
+    {'nombre':'Félix Ordóñez',     'pos':'DEF','impacto_atq':0.04},  # #4
+    {'nombre':'William Pacho',     'pos':'DEF','impacto_atq':0.04},  # #6
+    {'nombre':'Piero Hincapié',    'pos':'DEF','impacto_atq':0.06},  # #3
+    {'nombre':'Yeboah',            'pos':'MED','impacto_atq':0.08},  # #9
+    {'nombre':'Moisés Caicedo',    'pos':'MED','impacto_atq':0.12},  # #23
+    {'nombre':'Vite',              'pos':'MED','impacto_atq':0.09},  # #15
+    {'nombre':'Angulo',            'pos':'MED','impacto_atq':0.08},  # #20
+    {'nombre':'Gonzalo Plata',     'pos':'DEL','impacto_atq':0.10},  # #19
+    {'nombre':'Enner Valencia',    'pos':'DEL','impacto_atq':0.20},  # #13
  ]},
  'Egipto': {'formacion':'4-2-3-1','jugadores':[
     {'nombre':'Mohamed El-Shenawy','pos':'POR','impacto_atq':0.01},
@@ -782,14 +782,14 @@ ONCE_TITULAR = {
     {'nombre':'Ricardo Pepi',       'pos':'DEL','impacto_atq':0.14},  # #9
     {'nombre':'Tim Weah',           'pos':'DEL','impacto_atq':0.12},  # #21
  ]},
- 'Francia': {'formacion':'4-2-3-1','jugadores':[  # Forza: esperada vs Suecia (Thuram+Kanté fuera)
+ 'Francia': {'formacion':'4-2-3-1','jugadores':[  # Forza: XI real vs Noruega
     {'nombre':'Mike Maignan',       'pos':'POR','impacto_atq':0.01},  # #16
     {'nombre':'Jules Koundé',       'pos':'DEF','impacto_atq':0.07},  # #5
     {'nombre':'Dayot Upamecano',    'pos':'DEF','impacto_atq':0.03},  # #4
-    {'nombre':'Lacroix',            'pos':'DEF','impacto_atq':0.03},  # #26 (Saliba/Hernández fuera)
-    {'nombre':'Lucas Digne',        'pos':'DEF','impacto_atq':0.06},  # #3
+    {'nombre':'Lacroix',            'pos':'DEF','impacto_atq':0.03},  # #26
+    {'nombre':'Hernández',          'pos':'DEF','impacto_atq':0.07},  # #19 LB
+    {'nombre':'Koné',               'pos':'MED','impacto_atq':0.08},  # #6 (no Rabiot)
     {'nombre':'Aurélien Tchouaméni','pos':'MED','impacto_atq':0.07},  # #8
-    {'nombre':'Adrien Rabiot',      'pos':'MED','impacto_atq':0.08},  # #14
     {'nombre':'Ousmane Dembélé',    'pos':'DEL','impacto_atq':0.14},  # #7
     {'nombre':'Michael Olise',      'pos':'DEL','impacto_atq':0.14},  # #11
     {'nombre':'Désiré Doué',        'pos':'DEL','impacto_atq':0.12},  # #20
@@ -821,18 +821,18 @@ ONCE_TITULAR = {
     {'nombre':'Marcus Rashford',   'pos':'DEL','impacto_atq':0.12},  # #11
     {'nombre':'Harry Kane',        'pos':'DEL','impacto_atq':0.24},  # #9
  ]},
- 'Japón': {'formacion':'4-2-3-1','jugadores':[
-    {'nombre':'Shuichi Gonda',     'pos':'POR','impacto_atq':0.01},
-    {'nombre':'Yukinari Sugawara', 'pos':'DEF','impacto_atq':0.06},
-    {'nombre':'Ko Itakura',        'pos':'DEF','impacto_atq':0.04},
-    {'nombre':'Maya Yoshida',      'pos':'DEF','impacto_atq':0.03},
-    {'nombre':'Yuto Nagatomo',     'pos':'DEF','impacto_atq':0.05},
-    {'nombre':'Wataru Endo',       'pos':'MED','impacto_atq':0.07},
-    {'nombre':'Hidemasa Morita',   'pos':'MED','impacto_atq':0.07},
-    {'nombre':'Junya Ito',         'pos':'MED','impacto_atq':0.10},  # absorbió rol izquierdo de Mitoma
-    {'nombre':'Takefusa Kubo',     'pos':'DEL','impacto_atq':0.18},  # Mitoma (lesión) out
-    {'nombre':'Takumi Minamino',   'pos':'DEL','impacto_atq':0.14},
-    {'nombre':'Ritsu Doan',        'pos':'DEL','impacto_atq':0.12},
+ 'Japón': {'formacion':'3-4-2-1','jugadores':[  # Forza: XI vs Suecia R32 (Kubo lesión)
+    {'nombre':'Suzuki',            'pos':'POR','impacto_atq':0.01},  # #1 (no Gonda)
+    {'nombre':'Ko Itakura',        'pos':'DEF','impacto_atq':0.04},  # #4 CB
+    {'nombre':'Seko',              'pos':'DEF','impacto_atq':0.04},  # #20 CB
+    {'nombre':'Junya Ito',         'pos':'DEF','impacto_atq':0.05},  # #21 CB (3-back)
+    {'nombre':'Yukinari Sugawara', 'pos':'MED','impacto_atq':0.07},  # #2 WB
+    {'nombre':'Daichi Kamada',     'pos':'MED','impacto_atq':0.10},  # #15
+    {'nombre':'Ao Tanaka',         'pos':'MED','impacto_atq':0.08},  # #7
+    {'nombre':'Keito Nakamura',    'pos':'MED','impacto_atq':0.09},  # #13 WB
+    {'nombre':'Ritsu Doan',        'pos':'DEL','impacto_atq':0.12},  # #10
+    {'nombre':'Daizen Maeda',      'pos':'DEL','impacto_atq':0.10},  # #11
+    {'nombre':'Ayase Ueda',        'pos':'DEL','impacto_atq':0.14},  # #18 ST
  ]},
  'Marruecos': {'formacion':'4-2-3-1','jugadores':[  # XI real vs Países Bajos R32
     {'nombre':'Yassine Bounou',     'pos':'POR','impacto_atq':0.01},
@@ -847,31 +847,31 @@ ONCE_TITULAR = {
     {'nombre':'Bilal El Khannouss', 'pos':'MED','impacto_atq':0.12},
     {'nombre':'Ismael Saibari',     'pos':'DEL','impacto_atq':0.14},
  ]},
- 'México': {'formacion':'4-3-3','jugadores':[
-    {'nombre':'Guillermo Ochoa',   'pos':'POR','impacto_atq':0.02},
-    {'nombre':'Jorge Sánchez',     'pos':'DEF','impacto_atq':0.06},
-    {'nombre':'Johan Vásquez',     'pos':'DEF','impacto_atq':0.03},
-    {'nombre':'César Montes',      'pos':'DEF','impacto_atq':0.03},
-    {'nombre':'Jesús Gallardo',    'pos':'DEF','impacto_atq':0.06},
-    {'nombre':'Edson Álvarez',     'pos':'MED','impacto_atq':0.07},
-    {'nombre':'Héctor Herrera',    'pos':'MED','impacto_atq':0.08},
-    {'nombre':'Erick Gutiérrez',   'pos':'MED','impacto_atq':0.07},
-    {'nombre':'Hirving Lozano',    'pos':'DEL','impacto_atq':0.14},
-    {'nombre':'Raúl Jiménez',      'pos':'DEL','impacto_atq':0.20},
-    {'nombre':'Alexis Vega',       'pos':'DEL','impacto_atq':0.10},
+ 'México': {'formacion':'4-3-3','jugadores':[  # Forza: XI vs Chequia R32
+    {'nombre':'Rangel',            'pos':'POR','impacto_atq':0.01},  # #1 (no Ochoa)
+    {'nombre':'Chávez',            'pos':'DEF','impacto_atq':0.06},  # #20
+    {'nombre':'Reyes',             'pos':'DEF','impacto_atq':0.04},  # #15
+    {'nombre':'César Montes',      'pos':'DEF','impacto_atq':0.03},  # #3
+    {'nombre':'Sánchez',           'pos':'DEF','impacto_atq':0.05},  # #2
+    {'nombre':'Romo',              'pos':'MED','impacto_atq':0.08},  # #7
+    {'nombre':'Edson Álvarez',     'pos':'MED','impacto_atq':0.07},  # #4
+    {'nombre':'Mora',              'pos':'MED','impacto_atq':0.07},  # #19
+    {'nombre':'Quiñones',          'pos':'DEL','impacto_atq':0.10},  # #16
+    {'nombre':'Martínez',          'pos':'DEL','impacto_atq':0.12},  # #22
+    {'nombre':'Alvarado',          'pos':'DEL','impacto_atq':0.10},  # #25
  ]},
- 'Noruega': {'formacion':'4-3-3','jugadores':[
-    {'nombre':'Ørjan Nyland',      'pos':'POR','impacto_atq':0.02},
-    {'nombre':'Kristoffer Ajer',   'pos':'DEF','impacto_atq':0.05},
-    {'nombre':'Leo Østigård',      'pos':'DEF','impacto_atq':0.04},
-    {'nombre':'Andreas Hanche-Olsen','pos':'DEF','impacto_atq':0.04},
-    {'nombre':'Birger Meling',     'pos':'DEF','impacto_atq':0.05},
-    {'nombre':'Sander Berge',      'pos':'MED','impacto_atq':0.08},
-    {'nombre':'Martin Ødegaard',   'pos':'MED','impacto_atq':0.18},
-    {'nombre':'Fredrik Aursnes',   'pos':'MED','impacto_atq':0.08},
-    {'nombre':'Mohamed Elyounoussi','pos':'DEL','impacto_atq':0.12},
-    {'nombre':'Alexander Sørloth', 'pos':'DEL','impacto_atq':0.14},
-    {'nombre':'Erling Haaland',    'pos':'DEL','impacto_atq':0.38},
+ 'Noruega': {'formacion':'4-3-3','jugadores':[  # Forza: XI vs Costa de Marfil R32 (XI real)
+    {'nombre':'Ørjan Nyland',      'pos':'POR','impacto_atq':0.02},  # #1
+    {'nombre':'Møller Wolfe',      'pos':'DEF','impacto_atq':0.05},  # #5
+    {'nombre':'Kristoffer Ajer',   'pos':'DEF','impacto_atq':0.04},  # #3
+    {'nombre':'Heggem',            'pos':'DEF','impacto_atq':0.04},  # #17
+    {'nombre':'Pedersen',          'pos':'DEF','impacto_atq':0.06},  # #16
+    {'nombre':'Sander Berge',      'pos':'MED','impacto_atq':0.08},  # #8
+    {'nombre':'Patrick Berg',      'pos':'MED','impacto_atq':0.07},  # #6
+    {'nombre':'Martin Ødegaard',   'pos':'MED','impacto_atq':0.18},  # #10
+    {'nombre':'Antonio Nusa',      'pos':'DEL','impacto_atq':0.12},  # #20
+    {'nombre':'Erling Haaland',    'pos':'DEL','impacto_atq':0.38},  # #9
+    {'nombre':'Alexander Sørloth', 'pos':'DEL','impacto_atq':0.14},  # #7
  ]},
  'Países Bajos': {'formacion':'4-3-3','jugadores':[
     {'nombre':'Bart Verbruggen',    'pos':'POR','impacto_atq':0.01},
@@ -951,15 +951,15 @@ ONCE_TITULAR = {
     {'nombre':'Lyle Foster',       'pos':'DEL','impacto_atq':0.14},
     {'nombre':'Bongokuhle Hlongwane','pos':'DEL','impacto_atq':0.10},
  ]},
- 'Suecia': {'formacion':'3-4-3','jugadores':[  # Forza: esperada vs Francia (Lindelöf+Hien fuera)
+ 'Suecia': {'formacion':'3-4-3','jugadores':[  # Forza: XI real vs Japón R32
     {'nombre':'Widell Zetterström', 'pos':'POR','impacto_atq':0.01},  # #1
-    {'nombre':'Starfelt',           'pos':'DEF','impacto_atq':0.03},  # #15
-    {'nombre':'Lagerbielke',        'pos':'DEF','impacto_atq':0.03},  # #2
-    {'nombre':'Gudmundsson',        'pos':'DEF','impacto_atq':0.05},  # #5 (WB o CB)
-    {'nombre':'Bernhardsson',       'pos':'MED','impacto_atq':0.07},  # #21
-    {'nombre':'Bergvall',           'pos':'MED','impacto_atq':0.10},  # #7
+    {'nombre':'Gudmundsson',        'pos':'DEF','impacto_atq':0.05},  # #5 CB
+    {'nombre':'Isak Hien',          'pos':'DEF','impacto_atq':0.03},  # #4 CB (jugó pese a reporte lesión)
+    {'nombre':'Lagerbielke',        'pos':'DEF','impacto_atq':0.03},  # #2 CB
+    {'nombre':'Stroud',             'pos':'MED','impacto_atq':0.06},  # #24 WB
     {'nombre':'Ayari',              'pos':'MED','impacto_atq':0.07},  # #18
-    {'nombre':'Stroud',             'pos':'MED','impacto_atq':0.06},  # #24
+    {'nombre':'Lindelöf',           'pos':'MED','impacto_atq':0.05},  # #3 (jugó pese a reporte lesión)
+    {'nombre':'Bernhardsson',       'pos':'MED','impacto_atq':0.07},  # #21 WB
     {'nombre':'Alexander Isak',     'pos':'DEL','impacto_atq':0.22},  # #9
     {'nombre':'Viktor Gyökeres',    'pos':'DEL','impacto_atq':0.18},  # #17
     {'nombre':'Anthony Elanga',     'pos':'DEL','impacto_atq':0.12},  # #11
