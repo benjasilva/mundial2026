@@ -206,51 +206,51 @@ UTC_OFFSET = -4  # Chile continental en junio/julio (UTC-4)
 # Formato: (fecha_chile, local, visita, goles_local, goles_visita)
 # Dejar local/visita en None mientras no se confirmen equipos
 FIXTURE_R32 = {
-    # Fuente: FIFA oficial / Wikipedia 2026 FIFA World Cup knockout stage
-    # Fechas en hora Chile (UTC-4)
+    # Fuente: fixture oficial FIFA Copa Mundial 2026
     73: ("2026-06-28", "Sudáfrica",           "Canadá",               0,    1),     # → Canadá 1-0
-    74: ("2026-06-29", "Ecuador",             "Alemania",             2,    1),     # → Ecuador 2-1 (Forza)
-    75: ("2026-06-29", "Países Bajos",        "Marruecos",            1,    1),     # → 1-1 (pen: Marruecos 3-2)
-    76: ("2026-06-29", "Brasil",              "Francia",              None, None),  # → pendiente confirmar rival
-    77: ("2026-06-30", "Japón",               "Suecia",               1,    1),     # → 1-1 TC (Forza)
-    78: ("2026-06-30", "Costa de Marfil",     "Noruega",              None, None),  # en curso (Forza)
-    79: ("2026-06-30", "México",              "Chequia",              3,    0),     # → México 3-0 en curso (Forza)
-    80: ("2026-07-01", "Inglaterra",           "R. D. del Congo",      None, None),  # 12:00
-    81: ("2026-07-01", "Estados Unidos",       "Bosnia y Herzegovina", None, None),  # 20:00
-    82: ("2026-07-01", "Bélgica",              "Senegal",              None, None),  # 16:00
-    83: ("2026-07-02", "Portugal",             "Croacia",              None, None),  # 19:00
-    84: ("2026-07-02", "España",               "Austria",              None, None),  # 15:00
-    85: ("2026-07-02", "Suiza",                "Argelia",              None, None),  # 23:00
-    86: ("2026-07-03", "Argentina",            "Cabo Verde",           None, None),  # 18:00
-    87: ("2026-07-03", "Colombia",             "Ghana",                None, None),  # 21:30
-    88: ("2026-07-03", "Australia",            "Egipto",               None, None),  # 14:00
+    74: ("2026-06-29", "Alemania",            "Paraguay",             None, None),  # pendiente
+    75: ("2026-06-29", "Países Bajos",        "Marruecos",            None, None),  # pendiente
+    76: ("2026-06-29", "Brasil",              "Japón",                None, None),  # pendiente
+    77: ("2026-06-30", "Francia",             "Suecia",               None, None),  # hoy
+    78: ("2026-06-30", "Costa de Marfil",     "Noruega",              None, None),  # hoy
+    79: ("2026-06-30", "México",              "Ecuador",              None, None),  # hoy
+    80: ("2026-07-01", "Inglaterra",          "R. D. del Congo",      None, None),
+    81: ("2026-07-01", "Estados Unidos",      "Bosnia y Herzegovina", None, None),
+    82: ("2026-07-01", "Bélgica",             "Senegal",              None, None),
+    83: ("2026-07-02", "Portugal",            "Croacia",              None, None),
+    84: ("2026-07-02", "España",              "Austria",              None, None),
+    85: ("2026-07-02", "Suiza",               "Argelia",              None, None),
+    86: ("2026-07-03", "Argentina",           "Cabo Verde",           None, None),
+    87: ("2026-07-03", "Colombia",            "Ghana",                None, None),
+    88: ("2026-07-03", "Australia",           "Egipto",               None, None),
 }
 # R16 — octavos de final
 FIXTURE_R16 = {
-    89:  ("2026-07-06", None, None, None, None),
-    90:  ("2026-07-06", None, None, None, None),
-    91:  ("2026-07-07", None, None, None, None),
-    92:  ("2026-07-07", None, None, None, None),
-    93:  ("2026-07-08", None, None, None, None),
-    94:  ("2026-07-08", None, None, None, None),
-    95:  ("2026-07-09", None, None, None, None),
-    96:  ("2026-07-09", None, None, None, None),
+    89:  ("2026-07-04", None, None, None, None),
+    90:  ("2026-07-04", None, None, None, None),
+    91:  ("2026-07-05", None, None, None, None),
+    92:  ("2026-07-05", None, None, None, None),
+    93:  ("2026-07-06", None, None, None, None),
+    94:  ("2026-07-06", None, None, None, None),
+    95:  ("2026-07-07", None, None, None, None),
+    96:  ("2026-07-07", None, None, None, None),
 }
 # QF — cuartos de final
 FIXTURE_QF = {
-    97:  ("2026-07-11", None, None, None, None),
-    98:  ("2026-07-11", None, None, None, None),
-    99:  ("2026-07-12", None, None, None, None),
-    100: ("2026-07-12", None, None, None, None),
+    97:  ("2026-07-09", None, None, None, None),
+    98:  ("2026-07-10", None, None, None, None),
+    99:  ("2026-07-11", None, None, None, None),
+    100: ("2026-07-11", None, None, None, None),
 }
 # SF — semifinales
 FIXTURE_SF = {
     101: ("2026-07-14", None, None, None, None),
     102: ("2026-07-15", None, None, None, None),
 }
-# Final
+# 3er puesto y Final
 FIXTURE_FINAL = {
-    103: ("2026-07-19", None, None, None, None),
+    103: ("2026-07-18", None, None, None, None),  # 3er puesto
+    104: ("2026-07-19", None, None, None, None),  # Final
 }
 
 # Bracket de R16/QF/SF/Final (qué partidos enfrentan ganadores de qué matches)
@@ -258,7 +258,8 @@ BRACKET_R16_LABELS = [(89,"M73","M74"),(90,"M75","M76"),(91,"M77","M78"),(92,"M7
                       (93,"M81","M82"),(94,"M83","M84"),(95,"M85","M86"),(96,"M87","M88")]
 BRACKET_QF_LABELS  = [(97,"M89","M90"),(98,"M91","M92"),(99,"M93","M94"),(100,"M95","M96")]
 BRACKET_SF_LABELS  = [(101,"M97","M98"),(102,"M99","M100")]
-BRACKET_F_LABEL    = [(103,"M101","M102")]
+BRACKET_3RD_LABEL  = [(103,"M101","M102")]  # 3er puesto
+BRACKET_F_LABEL    = [(104,"M101","M102")]  # Final
 
 # =====================================================================
 # BRACKET OFICIAL R32 — Copa Mundial 2026
