@@ -594,15 +594,419 @@ ESTRELLAS = {
     'Haití':        [{'nombre':'Duckens Nazon',        'impacto_atq':0.14}],
 }
 
+# =====================================================================
+# ONCE TITULAR — 11 titulares habituales por selección
+# Base: lineups de este Mundial. impacto_atq = reducción lambda si no juega.
+# POS: POR · DEF · MED · DEL
+# =====================================================================
+ONCE_TITULAR = {
+ 'Argentina': {'formacion':'4-3-3','jugadores':[
+    {'nombre':'Emiliano Martínez', 'pos':'POR','impacto_atq':0.02},
+    {'nombre':'Nahuel Molina',     'pos':'DEF','impacto_atq':0.06},
+    {'nombre':'Cristian Romero',   'pos':'DEF','impacto_atq':0.03},
+    {'nombre':'Lisandro Martínez', 'pos':'DEF','impacto_atq':0.03},
+    {'nombre':'Nicolás Tagliafico','pos':'DEF','impacto_atq':0.05},
+    {'nombre':'Rodrigo De Paul',   'pos':'MED','impacto_atq':0.09},
+    {'nombre':'Enzo Fernández',    'pos':'MED','impacto_atq':0.09},
+    {'nombre':'Alexis Mac Allister','pos':'MED','impacto_atq':0.09},
+    {'nombre':'Lionel Messi',      'pos':'DEL','impacto_atq':0.28},
+    {'nombre':'Lautaro Martínez',  'pos':'DEL','impacto_atq':0.14},
+    {'nombre':'Julián Álvarez',    'pos':'DEL','impacto_atq':0.09},
+ ]},
+ 'Australia': {'formacion':'4-3-3','jugadores':[
+    {'nombre':'Mat Ryan',          'pos':'POR','impacto_atq':0.01},
+    {'nombre':'Nathaniel Atkinson','pos':'DEF','impacto_atq':0.05},
+    {'nombre':'Harry Souttar',     'pos':'DEF','impacto_atq':0.03},
+    {'nombre':'Kye Rowles',        'pos':'DEF','impacto_atq':0.03},
+    {'nombre':'Aziz Behich',       'pos':'DEF','impacto_atq':0.05},
+    {'nombre':'Jackson Irvine',    'pos':'MED','impacto_atq':0.07},
+    {'nombre':'Riley McGree',      'pos':'MED','impacto_atq':0.08},
+    {'nombre':"Aiden O'Neill",     'pos':'MED','impacto_atq':0.06},
+    {'nombre':'Mathew Leckie',     'pos':'DEL','impacto_atq':0.16},
+    {'nombre':'Mitchell Duke',     'pos':'DEL','impacto_atq':0.12},
+    {'nombre':'Marco Tilio',       'pos':'DEL','impacto_atq':0.08},
+ ]},
+ 'Austria': {'formacion':'4-2-3-1','jugadores':[
+    {'nombre':'Patrick Pentz',         'pos':'POR','impacto_atq':0.01},
+    {'nombre':'Stefan Lainer',         'pos':'DEF','impacto_atq':0.05},
+    {'nombre':'Philipp Lienhart',      'pos':'DEF','impacto_atq':0.03},
+    {'nombre':'Kevin Danso',           'pos':'DEF','impacto_atq':0.03},
+    {'nombre':'Phillip Mwene',         'pos':'DEF','impacto_atq':0.05},
+    {'nombre':'Nicolas Seiwald',       'pos':'MED','impacto_atq':0.07},
+    {'nombre':'Florian Grillitsch',    'pos':'MED','impacto_atq':0.07},
+    {'nombre':'Marcel Sabitzer',       'pos':'MED','impacto_atq':0.14},
+    {'nombre':'Christoph Baumgartner', 'pos':'MED','impacto_atq':0.10},
+    {'nombre':'Marko Arnautović',      'pos':'DEL','impacto_atq':0.14},
+    {'nombre':'Michael Gregoritsch',   'pos':'DEL','impacto_atq':0.08},
+ ]},
+ 'Bélgica': {'formacion':'4-3-3','jugadores':[
+    {'nombre':'Koen Casteels',    'pos':'POR','impacto_atq':0.01},
+    {'nombre':'Timothy Castagne', 'pos':'DEF','impacto_atq':0.07},
+    {'nombre':'Wout Faes',        'pos':'DEF','impacto_atq':0.03},
+    {'nombre':'Jan Vertonghen',   'pos':'DEF','impacto_atq':0.03},
+    {'nombre':'Yannick Carrasco', 'pos':'DEF','impacto_atq':0.08},
+    {'nombre':'Axel Witsel',      'pos':'MED','impacto_atq':0.05},
+    {'nombre':'Kevin De Bruyne',  'pos':'MED','impacto_atq':0.22},
+    {'nombre':'Thorgan Hazard',   'pos':'MED','impacto_atq':0.09},
+    {'nombre':'Dries Mertens',    'pos':'DEL','impacto_atq':0.10},
+    {'nombre':'Romelu Lukaku',    'pos':'DEL','impacto_atq':0.16},
+    {'nombre':'Leandro Trossard', 'pos':'DEL','impacto_atq':0.10},
+ ]},
+ 'Bosnia y Herzegovina': {'formacion':'4-2-3-1','jugadores':[
+    {'nombre':'Vedran Kjosak',       'pos':'POR','impacto_atq':0.01},
+    {'nombre':'Sasa Kolašinac',      'pos':'DEF','impacto_atq':0.04},
+    {'nombre':'Ermin Bičakčić',      'pos':'DEF','impacto_atq':0.03},
+    {'nombre':'Amer Govedarica',     'pos':'DEF','impacto_atq':0.03},
+    {'nombre':'Anel Ahmedhodžić',    'pos':'DEF','impacto_atq':0.05},
+    {'nombre':'Miralem Pjanić',      'pos':'MED','impacto_atq':0.12},
+    {'nombre':'Armin Hodžić',        'pos':'MED','impacto_atq':0.07},
+    {'nombre':'Sead Kolašinac',      'pos':'MED','impacto_atq':0.06},
+    {'nombre':'Haris Hajradinović',  'pos':'MED','impacto_atq':0.09},
+    {'nombre':'Edin Džeko',          'pos':'DEL','impacto_atq':0.22},
+    {'nombre':'Anel Ahmedhodžić',    'pos':'DEL','impacto_atq':0.07},
+ ]},
+ 'Brasil': {'formacion':'4-3-3','jugadores':[
+    {'nombre':'Alisson',           'pos':'POR','impacto_atq':0.02},
+    {'nombre':'Danilo',            'pos':'DEF','impacto_atq':0.05},
+    {'nombre':'Marquinhos',        'pos':'DEF','impacto_atq':0.04},
+    {'nombre':'Gabriel Magalhães', 'pos':'DEF','impacto_atq':0.04},
+    {'nombre':'Wendell',           'pos':'DEF','impacto_atq':0.05},
+    {'nombre':'Casemiro',          'pos':'MED','impacto_atq':0.06},
+    {'nombre':'Bruno Guimarães',   'pos':'MED','impacto_atq':0.10},
+    {'nombre':'Lucas Paquetá',     'pos':'MED','impacto_atq':0.12},
+    {'nombre':'Rodrygo',           'pos':'DEL','impacto_atq':0.12},
+    {'nombre':'Endrick',           'pos':'DEL','impacto_atq':0.10},
+    {'nombre':'Vinicius Jr.',      'pos':'DEL','impacto_atq':0.24},
+ ]},
+ 'Canadá': {'formacion':'4-3-3','jugadores':[
+    {'nombre':'Dayne St. Clair',   'pos':'POR','impacto_atq':0.01},
+    {'nombre':'Richie Laryea',     'pos':'DEF','impacto_atq':0.06},
+    {'nombre':'Steven Vitória',    'pos':'DEF','impacto_atq':0.03},
+    {'nombre':'Kamal Miller',      'pos':'DEF','impacto_atq':0.03},
+    {'nombre':'Alphonso Davies',   'pos':'DEF','impacto_atq':0.22},
+    {'nombre':'Stephen Eustáquio', 'pos':'MED','impacto_atq':0.09},
+    {'nombre':'Samuel Piette',     'pos':'MED','impacto_atq':0.06},
+    {'nombre':'Ismael Koné',       'pos':'MED','impacto_atq':0.08},
+    {'nombre':'Tajon Buchanan',    'pos':'DEL','impacto_atq':0.12},
+    {'nombre':'Jonathan David',    'pos':'DEL','impacto_atq':0.18},
+    {'nombre':'Junior Hoilett',    'pos':'DEL','impacto_atq':0.08},
+ ]},
+ 'Colombia': {'formacion':'4-2-3-1','jugadores':[
+    {'nombre':'Camilo Vargas',     'pos':'POR','impacto_atq':0.02},
+    {'nombre':'Daniel Muñoz',      'pos':'DEF','impacto_atq':0.07},
+    {'nombre':'Dávinson Sánchez',  'pos':'DEF','impacto_atq':0.03},
+    {'nombre':'Yerry Mina',        'pos':'DEF','impacto_atq':0.04},
+    {'nombre':'Johan Mojica',      'pos':'DEF','impacto_atq':0.06},
+    {'nombre':'Wilmar Barrios',    'pos':'MED','impacto_atq':0.05},
+    {'nombre':'Richard Ríos',      'pos':'MED','impacto_atq':0.09},
+    {'nombre':'James Rodríguez',   'pos':'MED','impacto_atq':0.16},
+    {'nombre':'Luis Díaz',         'pos':'DEL','impacto_atq':0.20},
+    {'nombre':'Cucho Hernández',   'pos':'DEL','impacto_atq':0.12},
+    {'nombre':'Rafael Santos Borré','pos':'DEL','impacto_atq':0.10},
+ ]},
+ 'Costa de Marfil': {'formacion':'4-3-3','jugadores':[
+    {'nombre':'Yahia Fofana',      'pos':'POR','impacto_atq':0.01},
+    {'nombre':'Serge Aurier',      'pos':'DEF','impacto_atq':0.07},
+    {'nombre':'Evan Ndicka',       'pos':'DEF','impacto_atq':0.04},
+    {'nombre':'Odilon Kossounou',  'pos':'DEF','impacto_atq':0.04},
+    {'nombre':'Ghislain Konan',    'pos':'DEF','impacto_atq':0.06},
+    {'nombre':'Franck Kessié',     'pos':'MED','impacto_atq':0.08},
+    {'nombre':'Seko Fofana',       'pos':'MED','impacto_atq':0.10},
+    {'nombre':'Ibrahim Sangaré',   'pos':'MED','impacto_atq':0.07},
+    {'nombre':'Nicolas Pépé',      'pos':'DEL','impacto_atq':0.14},
+    {'nombre':'Sébastien Haller',  'pos':'DEL','impacto_atq':0.18},
+    {'nombre':'Simon Adingra',     'pos':'DEL','impacto_atq':0.10},
+ ]},
+ 'Croacia': {'formacion':'4-2-3-1','jugadores':[
+    {'nombre':'Dominik Livaković', 'pos':'POR','impacto_atq':0.01},
+    {'nombre':'Josip Stanišić',    'pos':'DEF','impacto_atq':0.05},
+    {'nombre':'Joško Gvardiol',    'pos':'DEF','impacto_atq':0.06},
+    {'nombre':'Dario Španić',      'pos':'DEF','impacto_atq':0.03},
+    {'nombre':'Borna Sosa',        'pos':'DEF','impacto_atq':0.06},
+    {'nombre':'Marcelo Brozović',  'pos':'MED','impacto_atq':0.07},
+    {'nombre':'Mateo Kovačić',     'pos':'MED','impacto_atq':0.10},
+    {'nombre':'Luka Modrić',       'pos':'MED','impacto_atq':0.18},
+    {'nombre':'Ivan Perišić',      'pos':'DEL','impacto_atq':0.14},
+    {'nombre':'Andrej Kramarić',   'pos':'DEL','impacto_atq':0.14},
+    {'nombre':'Bruno Petković',    'pos':'DEL','impacto_atq':0.08},
+ ]},
+ 'Ecuador': {'formacion':'4-3-3','jugadores':[
+    {'nombre':'Hernán Galíndez',   'pos':'POR','impacto_atq':0.01},
+    {'nombre':'Ángelo Preciado',   'pos':'DEF','impacto_atq':0.06},
+    {'nombre':'Piero Hincapié',    'pos':'DEF','impacto_atq':0.05},
+    {'nombre':'William Pacho',     'pos':'DEF','impacto_atq':0.04},
+    {'nombre':'Pervis Estupiñán',  'pos':'DEF','impacto_atq':0.07},
+    {'nombre':'Carlos Gruezo',     'pos':'MED','impacto_atq':0.07},
+    {'nombre':'Moisés Caicedo',    'pos':'MED','impacto_atq':0.12},
+    {'nombre':'Kendry Páez',       'pos':'MED','impacto_atq':0.10},
+    {'nombre':'Enner Valencia',    'pos':'DEL','impacto_atq':0.20},
+    {'nombre':'Gonzalo Plata',     'pos':'DEL','impacto_atq':0.10},
+    {'nombre':'Jeremy Sarmiento',  'pos':'DEL','impacto_atq':0.10},
+ ]},
+ 'Egipto': {'formacion':'4-2-3-1','jugadores':[
+    {'nombre':'Mohamed El-Shenawy','pos':'POR','impacto_atq':0.01},
+    {'nombre':'Ahmed Hegazi',      'pos':'DEF','impacto_atq':0.04},
+    {'nombre':'Omar Kamal',        'pos':'DEF','impacto_atq':0.03},
+    {'nombre':'Ahmed Fatouh',      'pos':'DEF','impacto_atq':0.03},
+    {'nombre':'Omar Abdel Hakem',  'pos':'DEF','impacto_atq':0.05},
+    {'nombre':'Tarek Hamed',       'pos':'MED','impacto_atq':0.05},
+    {'nombre':'Hamdi Fathi',       'pos':'MED','impacto_atq':0.07},
+    {'nombre':'Trézéguet',         'pos':'MED','impacto_atq':0.10},
+    {'nombre':'Omar Marmoush',     'pos':'DEL','impacto_atq':0.14},
+    {'nombre':'Mohamed Salah',     'pos':'DEL','impacto_atq':0.32},
+    {'nombre':'Mostafa Mohamed',   'pos':'DEL','impacto_atq':0.12},
+ ]},
+ 'España': {'formacion':'4-3-3','jugadores':[
+    {'nombre':'Unai Simón',        'pos':'POR','impacto_atq':0.01},
+    {'nombre':'Dani Carvajal',     'pos':'DEF','impacto_atq':0.07},
+    {'nombre':'Pau Cubarsí',       'pos':'DEF','impacto_atq':0.04},
+    {'nombre':'Aymeric Laporte',   'pos':'DEF','impacto_atq':0.04},
+    {'nombre':'Alejandro Grimaldo','pos':'DEF','impacto_atq':0.07},
+    {'nombre':'Rodri',             'pos':'MED','impacto_atq':0.10},
+    {'nombre':'Fabián Ruiz',       'pos':'MED','impacto_atq':0.10},
+    {'nombre':'Dani Olmo',         'pos':'MED','impacto_atq':0.12},
+    {'nombre':'Lamine Yamal',      'pos':'DEL','impacto_atq':0.18},
+    {'nombre':'Álvaro Morata',     'pos':'DEL','impacto_atq':0.14},
+    {'nombre':'Nico Williams',     'pos':'DEL','impacto_atq':0.14},
+ ]},
+ 'Estados Unidos': {'formacion':'4-3-3','jugadores':[
+    {'nombre':'Matt Turner',       'pos':'POR','impacto_atq':0.01},
+    {'nombre':'Sergino Dest',      'pos':'DEF','impacto_atq':0.07},
+    {'nombre':'Miles Robinson',    'pos':'DEF','impacto_atq':0.03},
+    {'nombre':'Chris Richards',    'pos':'DEF','impacto_atq':0.04},
+    {'nombre':'Antonee Robinson',  'pos':'DEF','impacto_atq':0.07},
+    {'nombre':'Tyler Adams',       'pos':'MED','impacto_atq':0.07},
+    {'nombre':'Weston McKennie',   'pos':'MED','impacto_atq':0.10},
+    {'nombre':'Yunus Musah',       'pos':'MED','impacto_atq':0.08},
+    {'nombre':'Christian Pulisic', 'pos':'DEL','impacto_atq':0.24},
+    {'nombre':'Gio Reyna',         'pos':'DEL','impacto_atq':0.12},
+    {'nombre':'Josh Sargent',      'pos':'DEL','impacto_atq':0.10},
+ ]},
+ 'Francia': {'formacion':'4-2-3-1','jugadores':[
+    {'nombre':'Mike Maignan',      'pos':'POR','impacto_atq':0.01},
+    {'nombre':'Jules Koundé',      'pos':'DEF','impacto_atq':0.07},
+    {'nombre':'Dayot Upamecano',   'pos':'DEF','impacto_atq':0.03},
+    {'nombre':'William Saliba',    'pos':'DEF','impacto_atq':0.03},
+    {'nombre':'Théo Hernández',    'pos':'DEF','impacto_atq':0.08},
+    {'nombre':'Aurélien Tchouaméni','pos':'MED','impacto_atq':0.07},
+    {'nombre':'Adrien Rabiot',     'pos':'MED','impacto_atq':0.08},
+    {'nombre':'Antoine Griezmann', 'pos':'MED','impacto_atq':0.14},
+    {'nombre':'Ousmane Dembélé',   'pos':'DEL','impacto_atq':0.14},
+    {'nombre':'Kylian Mbappé',     'pos':'DEL','impacto_atq':0.30},
+    {'nombre':'Marcus Thuram',     'pos':'DEL','impacto_atq':0.12},
+ ]},
+ 'Ghana': {'formacion':'4-2-3-1','jugadores':[
+    {'nombre':'Lawrence Ati-Zigi', 'pos':'POR','impacto_atq':0.01},
+    {'nombre':'Tariqe Fosu',       'pos':'DEF','impacto_atq':0.05},
+    {'nombre':'Alexander Djiku',   'pos':'DEF','impacto_atq':0.03},
+    {'nombre':'Daniel Amartey',    'pos':'DEF','impacto_atq':0.04},
+    {'nombre':'Gideon Mensah',     'pos':'DEF','impacto_atq':0.05},
+    {'nombre':'Thomas Partey',     'pos':'MED','impacto_atq':0.08},
+    {'nombre':'Iddrisu Baba',      'pos':'MED','impacto_atq':0.06},
+    {'nombre':'Kudus Mohammed',    'pos':'MED','impacto_atq':0.14},
+    {'nombre':'Jordan Ayew',       'pos':'DEL','impacto_atq':0.16},
+    {'nombre':'André Ayew',        'pos':'DEL','impacto_atq':0.14},
+    {'nombre':'Antoine Semenyo',   'pos':'DEL','impacto_atq':0.10},
+ ]},
+ 'Inglaterra': {'formacion':'4-3-3','jugadores':[
+    {'nombre':'Jordan Pickford',   'pos':'POR','impacto_atq':0.01},
+    {'nombre':'Kyle Walker',       'pos':'DEF','impacto_atq':0.06},
+    {'nombre':'John Stones',       'pos':'DEF','impacto_atq':0.04},
+    {'nombre':'Harry Maguire',     'pos':'DEF','impacto_atq':0.04},
+    {'nombre':'Kieran Trippier',   'pos':'DEF','impacto_atq':0.08},
+    {'nombre':'Declan Rice',       'pos':'MED','impacto_atq':0.08},
+    {'nombre':'Jude Bellingham',   'pos':'MED','impacto_atq':0.20},
+    {'nombre':'Bukayo Saka',       'pos':'DEL','impacto_atq':0.16},
+    {'nombre':'Phil Foden',        'pos':'DEL','impacto_atq':0.16},
+    {'nombre':'Harry Kane',        'pos':'DEL','impacto_atq':0.24},
+    {'nombre':'Marcus Rashford',   'pos':'DEL','impacto_atq':0.12},
+ ]},
+ 'Japón': {'formacion':'4-2-3-1','jugadores':[
+    {'nombre':'Shuichi Gonda',     'pos':'POR','impacto_atq':0.01},
+    {'nombre':'Yukinari Sugawara', 'pos':'DEF','impacto_atq':0.06},
+    {'nombre':'Ko Itakura',        'pos':'DEF','impacto_atq':0.04},
+    {'nombre':'Maya Yoshida',      'pos':'DEF','impacto_atq':0.03},
+    {'nombre':'Yuto Nagatomo',     'pos':'DEF','impacto_atq':0.05},
+    {'nombre':'Wataru Endo',       'pos':'MED','impacto_atq':0.07},
+    {'nombre':'Hidemasa Morita',   'pos':'MED','impacto_atq':0.07},
+    {'nombre':'Junya Ito',         'pos':'MED','impacto_atq':0.12},
+    {'nombre':'Kaoru Mitoma',      'pos':'DEL','impacto_atq':0.18},
+    {'nombre':'Takumi Minamino',   'pos':'DEL','impacto_atq':0.14},
+    {'nombre':'Ritsu Doan',        'pos':'DEL','impacto_atq':0.12},
+ ]},
+ 'Marruecos': {'formacion':'4-3-3','jugadores':[
+    {'nombre':'Yassine Bounou',    'pos':'POR','impacto_atq':0.01},
+    {'nombre':'Achraf Hakimi',     'pos':'DEF','impacto_atq':0.16},
+    {'nombre':'Romain Saïss',      'pos':'DEF','impacto_atq':0.04},
+    {'nombre':'Nayef Aguerd',      'pos':'DEF','impacto_atq':0.04},
+    {'nombre':'Noussair Mazraoui', 'pos':'DEF','impacto_atq':0.07},
+    {'nombre':'Azzedine Ounahi',   'pos':'MED','impacto_atq':0.09},
+    {'nombre':'Sofyan Amrabat',    'pos':'MED','impacto_atq':0.07},
+    {'nombre':'Selim Amallah',     'pos':'MED','impacto_atq':0.08},
+    {'nombre':'Hakim Ziyech',      'pos':'DEL','impacto_atq':0.18},
+    {'nombre':'Youssef En-Nesyri', 'pos':'DEL','impacto_atq':0.18},
+    {'nombre':'Soufiane Rahimi',   'pos':'DEL','impacto_atq':0.12},
+ ]},
+ 'México': {'formacion':'4-3-3','jugadores':[
+    {'nombre':'Guillermo Ochoa',   'pos':'POR','impacto_atq':0.02},
+    {'nombre':'Jorge Sánchez',     'pos':'DEF','impacto_atq':0.06},
+    {'nombre':'Johan Vásquez',     'pos':'DEF','impacto_atq':0.03},
+    {'nombre':'César Montes',      'pos':'DEF','impacto_atq':0.03},
+    {'nombre':'Jesús Gallardo',    'pos':'DEF','impacto_atq':0.06},
+    {'nombre':'Edson Álvarez',     'pos':'MED','impacto_atq':0.07},
+    {'nombre':'Héctor Herrera',    'pos':'MED','impacto_atq':0.08},
+    {'nombre':'Erick Gutiérrez',   'pos':'MED','impacto_atq':0.07},
+    {'nombre':'Hirving Lozano',    'pos':'DEL','impacto_atq':0.14},
+    {'nombre':'Raúl Jiménez',      'pos':'DEL','impacto_atq':0.20},
+    {'nombre':'Alexis Vega',       'pos':'DEL','impacto_atq':0.10},
+ ]},
+ 'Noruega': {'formacion':'4-3-3','jugadores':[
+    {'nombre':'Ørjan Nyland',      'pos':'POR','impacto_atq':0.02},
+    {'nombre':'Kristoffer Ajer',   'pos':'DEF','impacto_atq':0.05},
+    {'nombre':'Leo Østigård',      'pos':'DEF','impacto_atq':0.04},
+    {'nombre':'Andreas Hanche-Olsen','pos':'DEF','impacto_atq':0.04},
+    {'nombre':'Birger Meling',     'pos':'DEF','impacto_atq':0.05},
+    {'nombre':'Sander Berge',      'pos':'MED','impacto_atq':0.08},
+    {'nombre':'Martin Ødegaard',   'pos':'MED','impacto_atq':0.18},
+    {'nombre':'Fredrik Aursnes',   'pos':'MED','impacto_atq':0.08},
+    {'nombre':'Mohamed Elyounoussi','pos':'DEL','impacto_atq':0.12},
+    {'nombre':'Alexander Sørloth', 'pos':'DEL','impacto_atq':0.14},
+    {'nombre':'Erling Haaland',    'pos':'DEL','impacto_atq':0.38},
+ ]},
+ 'Países Bajos': {'formacion':'4-3-3','jugadores':[
+    {'nombre':'Bart Verbruggen',   'pos':'POR','impacto_atq':0.01},
+    {'nombre':'Denzel Dumfries',   'pos':'DEF','impacto_atq':0.09},
+    {'nombre':'Virgil van Dijk',   'pos':'DEF','impacto_atq':0.05},
+    {'nombre':'Micky van de Ven',  'pos':'DEF','impacto_atq':0.03},
+    {'nombre':'Nathan Aké',        'pos':'DEF','impacto_atq':0.05},
+    {'nombre':'Ryan Gravenberch',  'pos':'MED','impacto_atq':0.09},
+    {'nombre':'Tijjani Reijnders', 'pos':'MED','impacto_atq':0.10},
+    {'nombre':'Frenkie de Jong',   'pos':'MED','impacto_atq':0.10},
+    {'nombre':'Xavi Simons',       'pos':'DEL','impacto_atq':0.14},
+    {'nombre':'Cody Gakpo',        'pos':'DEL','impacto_atq':0.18},
+    {'nombre':'Memphis Depay',     'pos':'DEL','impacto_atq':0.14},
+ ]},
+ 'Paraguay': {'formacion':'4-3-3','jugadores':[
+    {'nombre':'Antony Silva',      'pos':'POR','impacto_atq':0.01},
+    {'nombre':'Gustavo Velázquez', 'pos':'DEF','impacto_atq':0.05},
+    {'nombre':'Fabián Balbuena',   'pos':'DEF','impacto_atq':0.04},
+    {'nombre':'Omar Alderete',     'pos':'DEF','impacto_atq':0.04},
+    {'nombre':'Santiago Arzamendia','pos':'DEF','impacto_atq':0.06},
+    {'nombre':'Mathías Villasanti','pos':'MED','impacto_atq':0.07},
+    {'nombre':'Richard Sánchez',   'pos':'MED','impacto_atq':0.07},
+    {'nombre':'Miguel Almirón',    'pos':'MED','impacto_atq':0.18},
+    {'nombre':'Julio Enciso',      'pos':'DEL','impacto_atq':0.14},
+    {'nombre':'Carlos González',   'pos':'DEL','impacto_atq':0.10},
+    {'nombre':'Jesús Medina',      'pos':'DEL','impacto_atq':0.10},
+ ]},
+ 'Portugal': {'formacion':'4-3-3','jugadores':[
+    {'nombre':'Diogo Costa',       'pos':'POR','impacto_atq':0.01},
+    {'nombre':'João Cancelo',      'pos':'DEF','impacto_atq':0.09},
+    {'nombre':'Rúben Dias',        'pos':'DEF','impacto_atq':0.04},
+    {'nombre':'Gonçalo Inácio',    'pos':'DEF','impacto_atq':0.04},
+    {'nombre':'Nuno Mendes',       'pos':'DEF','impacto_atq':0.07},
+    {'nombre':'João Palhinha',     'pos':'MED','impacto_atq':0.06},
+    {'nombre':'Bruno Fernandes',   'pos':'MED','impacto_atq':0.18},
+    {'nombre':'Vitinha',           'pos':'MED','impacto_atq':0.10},
+    {'nombre':'Rafael Leão',       'pos':'DEL','impacto_atq':0.14},
+    {'nombre':'Cristiano Ronaldo', 'pos':'DEL','impacto_atq':0.22},
+    {'nombre':'Diogo Jota',        'pos':'DEL','impacto_atq':0.14},
+ ]},
+ 'R. D. del Congo': {'formacion':'4-3-3','jugadores':[
+    {'nombre':'Joël Kiassumbua',   'pos':'POR','impacto_atq':0.01},
+    {'nombre':'Chancel Mbemba',    'pos':'DEF','impacto_atq':0.04},
+    {'nombre':'Marcel Tisserand',  'pos':'DEF','impacto_atq':0.03},
+    {'nombre':'Ley Matungulu',     'pos':'DEF','impacto_atq':0.03},
+    {'nombre':'Arthur Masuaku',    'pos':'DEF','impacto_atq':0.06},
+    {'nombre':'Samuel Moutoussamy','pos':'MED','impacto_atq':0.07},
+    {'nombre':'Silas Mvumpa',      'pos':'MED','impacto_atq':0.08},
+    {'nombre':'Théo Bongonda',     'pos':'MED','impacto_atq':0.09},
+    {'nombre':'Dodi Lukébakio',    'pos':'DEL','impacto_atq':0.18},
+    {'nombre':'Cédric Bakambu',    'pos':'DEL','impacto_atq':0.14},
+    {'nombre':'Yoane Wissa',       'pos':'DEL','impacto_atq':0.14},
+ ]},
+ 'Senegal': {'formacion':'4-3-3','jugadores':[
+    {'nombre':'Édouard Mendy',     'pos':'POR','impacto_atq':0.02},
+    {'nombre':'Bouna Sarr',        'pos':'DEF','impacto_atq':0.05},
+    {'nombre':'Kalidou Koulibaly', 'pos':'DEF','impacto_atq':0.05},
+    {'nombre':'Abdou Diallo',      'pos':'DEF','impacto_atq':0.04},
+    {'nombre':'Youssouf Sabaly',   'pos':'DEF','impacto_atq':0.06},
+    {'nombre':'Pape Matar Sarr',   'pos':'MED','impacto_atq':0.10},
+    {'nombre':'Idrissa Gueye',     'pos':'MED','impacto_atq':0.07},
+    {'nombre':'Nampalys Mendy',    'pos':'MED','impacto_atq':0.06},
+    {'nombre':'Ismaïla Sarr',      'pos':'DEL','impacto_atq':0.14},
+    {'nombre':'Sadio Mané',        'pos':'DEL','impacto_atq':0.26},
+    {'nombre':'Boulaye Dia',       'pos':'DEL','impacto_atq':0.12},
+ ]},
+ 'Sudáfrica': {'formacion':'4-3-3','jugadores':[
+    {'nombre':'Ronwen Williams',   'pos':'POR','impacto_atq':0.02},
+    {'nombre':'Reeve Frosler',     'pos':'DEF','impacto_atq':0.06},
+    {'nombre':'Rushine De Reuck',  'pos':'DEF','impacto_atq':0.03},
+    {'nombre':'Mothobi Mvala',     'pos':'DEF','impacto_atq':0.03},
+    {'nombre':'Innocent Maela',    'pos':'DEF','impacto_atq':0.05},
+    {'nombre':'Teboho Mokoena',    'pos':'MED','impacto_atq':0.10},
+    {'nombre':'Ethan Nkosi',       'pos':'MED','impacto_atq':0.07},
+    {'nombre':'Themba Zwane',      'pos':'MED','impacto_atq':0.10},
+    {'nombre':'Percy Tau',         'pos':'DEL','impacto_atq':0.18},
+    {'nombre':'Lyle Foster',       'pos':'DEL','impacto_atq':0.14},
+    {'nombre':'Bongokuhle Hlongwane','pos':'DEL','impacto_atq':0.10},
+ ]},
+ 'Suecia': {'formacion':'4-3-3','jugadores':[
+    {'nombre':'Robin Olsen',       'pos':'POR','impacto_atq':0.01},
+    {'nombre':'Emil Krafth',       'pos':'DEF','impacto_atq':0.05},
+    {'nombre':'Victor Lindelöf',   'pos':'DEF','impacto_atq':0.04},
+    {'nombre':'Isak Hien',         'pos':'DEF','impacto_atq':0.04},
+    {'nombre':'Ludwig Augustinsson','pos':'DEF','impacto_atq':0.05},
+    {'nombre':'Dejan Kulusevski',  'pos':'MED','impacto_atq':0.14},
+    {'nombre':'Emil Forsberg',     'pos':'MED','impacto_atq':0.12},
+    {'nombre':'Mattias Svanberg',  'pos':'MED','impacto_atq':0.07},
+    {'nombre':'Anthony Elanga',    'pos':'DEL','impacto_atq':0.12},
+    {'nombre':'Viktor Gyökeres',   'pos':'DEL','impacto_atq':0.18},
+    {'nombre':'Alexander Isak',    'pos':'DEL','impacto_atq':0.22},
+ ]},
+ 'Suiza': {'formacion':'4-2-3-1','jugadores':[
+    {'nombre':'Yann Sommer',       'pos':'POR','impacto_atq':0.01},
+    {'nombre':'Silvan Widmer',     'pos':'DEF','impacto_atq':0.07},
+    {'nombre':'Nico Elvedi',       'pos':'DEF','impacto_atq':0.03},
+    {'nombre':'Manuel Akanji',     'pos':'DEF','impacto_atq':0.04},
+    {'nombre':'Ricardo Rodríguez', 'pos':'DEF','impacto_atq':0.06},
+    {'nombre':'Remo Freuler',      'pos':'MED','impacto_atq':0.07},
+    {'nombre':'Granit Xhaka',      'pos':'MED','impacto_atq':0.10},
+    {'nombre':'Xherdan Shaqiri',   'pos':'MED','impacto_atq':0.14},
+    {'nombre':'Ruben Vargas',      'pos':'DEL','impacto_atq':0.12},
+    {'nombre':'Ardon Jashari',     'pos':'MED','impacto_atq':0.09},
+    {'nombre':'Breel Embolo',      'pos':'DEL','impacto_atq':0.12},
+ ]},
+ 'Alemania': {'formacion':'4-2-3-1','jugadores':[
+    {'nombre':'Manuel Neuer',      'pos':'POR','impacto_atq':0.02},
+    {'nombre':'Joshua Kimmich',    'pos':'DEF','impacto_atq':0.10},
+    {'nombre':'Antonio Rüdiger',   'pos':'DEF','impacto_atq':0.04},
+    {'nombre':'Jonathan Tah',      'pos':'DEF','impacto_atq':0.04},
+    {'nombre':'Maximilian Mittelstädt','pos':'DEF','impacto_atq':0.06},
+    {'nombre':'Toni Kroos',        'pos':'MED','impacto_atq':0.12},
+    {'nombre':'Robert Andrich',    'pos':'MED','impacto_atq':0.07},
+    {'nombre':'Jamal Musiala',     'pos':'MED','impacto_atq':0.18},
+    {'nombre':'Leroy Sané',        'pos':'DEL','impacto_atq':0.14},
+    {'nombre':'Kai Havertz',       'pos':'DEL','impacto_atq':0.14},
+    {'nombre':'Florian Wirtz',     'pos':'DEL','impacto_atq':0.20},
+ ]},
+}
+
+def _get_jugadores(equipo):
+    """Devuelve la lista de jugadores con impacto. Prioriza ONCE_TITULAR, fallback a ESTRELLAS."""
+    if equipo in ONCE_TITULAR:
+        return ONCE_TITULAR[equipo]['jugadores']
+    return ESTRELLAS.get(equipo, [])
+
 def lambdas_adj(local, visita, fecha=None, aus_local=None, aus_visita=None):
-    """Lambda base + descuento por ausencia de estrellas."""
+    """Lambda base + descuento por ausencia de titulares."""
     ll, lv = lambdas(local, visita, fecha=fecha)
     if aus_local:
-        impacto = sum(j['impacto_atq'] for j in ESTRELLAS.get(local, [])
+        impacto = sum(j['impacto_atq'] for j in _get_jugadores(local)
                       if j['nombre'] in aus_local)
         ll *= max(0.55, 1.0 - impacto)
     if aus_visita:
-        impacto = sum(j['impacto_atq'] for j in ESTRELLAS.get(visita, [])
+        impacto = sum(j['impacto_atq'] for j in _get_jugadores(visita)
                       if j['nombre'] in aus_visita)
         lv *= max(0.55, 1.0 - impacto)
     return ll, lv
@@ -1624,50 +2028,98 @@ with tab_pred:
           Si hubo gol en prórroga (al 120 min), ese marcador también es correcto como resultado final.
         </div>""", unsafe_allow_html=True)
 
-    # ── ⭐ FACTOR ESTRELLA — alineación ───────────────────────────────
+    # ── ⭐ ONCE TITULAR — seleccionar bajas ───────────────────────────
     st.markdown("---")
-    st.markdown("##### ⭐ Factor Estrella — jugadores clave")
-    st.caption("Marcá los titulares que NO estarán disponibles. El modelo ajustará el lambda ofensivo del equipo.")
+    st.markdown("##### ⭐ Alineación titular — marcá las bajas")
+    st.caption("Por defecto todos los titulares están disponibles. Marcá como baja a quien no juega (lesión, suspensión, etc.).")
 
-    est_local   = ESTRELLAS.get(local, [])
-    est_visita  = ESTRELLAS.get(visita, [])
-    alin_prev   = st.session_state.alineaciones.get(match_key, {'aus_local':[], 'aus_visita':[]})
+    jug_local  = _get_jugadores(local)
+    jug_visita = _get_jugadores(visita)
+    alin_prev  = st.session_state.alineaciones.get(match_key, {'aus_local':[], 'aus_visita':[]})
+
+    def _xi_html(jugadores, aus_prev, prefix):
+        """Renderiza el once como tarjetas con botón de baja. Devuelve HTML + lista actual bajas."""
+        pos_order = ['POR', 'DEF', 'MED', 'DEL']
+        por_pos = {p: [] for p in pos_order}
+        for j in jugadores:
+            p = j.get('pos', 'DEL')
+            por_pos.setdefault(p, []).append(j)
+        rows = []
+        for pos in pos_order:
+            for j in por_pos.get(pos, []):
+                rows.append((pos, j))
+        return rows
+
+    def _render_xi_col(jugadores, aus_prev, side_key, equipo_nombre):
+        """Muestra el XI con multiselect de bajas y visual HTML."""
+        nombres = [j['nombre'] for j in jugadores]
+        bajas = st.multiselect(
+            f"Bajas {equipo_nombre}",
+            options=nombres,
+            default=[n for n in aus_prev if n in nombres],
+            key=f"bajas_{side_key}_{match_key}",
+            placeholder="Ninguno (todos disponibles)",
+            label_visibility="collapsed"
+        )
+        # Mostrar XI visual
+        pos_order = ['POR', 'DEF', 'MED', 'DEL']
+        pos_label = {'POR':'🥅','DEF':'🛡️','MED':'⚙️','DEL':'⚡'}
+        por_pos = {p: [] for p in pos_order}
+        for j in jugadores:
+            por_pos.setdefault(j.get('pos','DEL'), []).append(j)
+        html_rows = []
+        for pos in pos_order:
+            pjs = por_pos.get(pos, [])
+            if not pjs: continue
+            for j in pjs:
+                es_baja = j['nombre'] in bajas
+                imp = int(j['impacto_atq']*100)
+                if es_baja:
+                    estilo = "color:#f38ba8;text-decoration:line-through;opacity:.65"
+                    badge = f'<span style="background:#f38ba8;color:#1e1e2e;font-size:.6rem;padding:1px 5px;border-radius:4px;margin-left:4px">BAJA ⬇{imp}%</span>'
+                else:
+                    estilo = "color:#cdd6f4"
+                    badge = f'<span style="color:#a6adc8;font-size:.68rem;margin-left:4px">⬇{imp}%</span>' if imp >= 8 else ''
+                html_rows.append(
+                    f'<div style="display:flex;align-items:center;padding:3px 0;border-bottom:1px solid #313244">'
+                    f'<span style="color:#6c7086;font-size:.65rem;min-width:26px">{pos_label.get(pos,"")}</span>'
+                    f'<span style="{estilo};font-size:.8rem">{j["nombre"]}</span>'
+                    f'{badge}'
+                    f'</div>'
+                )
+        st.markdown(
+            f'<div style="background:#1e1e2e;border:1px solid #313244;border-radius:8px;padding:8px 10px;margin-top:4px">'
+            + ''.join(html_rows) +
+            '</div>',
+            unsafe_allow_html=True
+        )
+        return bajas
 
     col_e1, col_e2 = st.columns(2)
     aus_local_new, aus_visita_new = [], []
 
     with col_e1:
         st.markdown(f"**{local}**")
-        if est_local:
-            for j in est_local:
-                impacto_pct = int(j['impacto_atq']*100)
-                ausente = st.checkbox(
-                    f"{j['nombre']}  ⬇{impacto_pct}% atq",
-                    value=(j['nombre'] in alin_prev['aus_local']),
-                    key=f"aus_loc_{match_key}_{j['nombre']}"
-                )
-                if ausente: aus_local_new.append(j['nombre'])
+        if jug_local:
+            aus_local_new = _render_xi_col(jug_local, alin_prev['aus_local'], 'loc', local)
         else:
-            st.caption("Sin estrellas definidas")
+            st.caption("Sin titulares definidos")
 
     with col_e2:
         st.markdown(f"**{visita}**")
-        if est_visita:
-            for j in est_visita:
-                impacto_pct = int(j['impacto_atq']*100)
-                ausente = st.checkbox(
-                    f"{j['nombre']}  ⬇{impacto_pct}% atq",
-                    value=(j['nombre'] in alin_prev['aus_visita']),
-                    key=f"aus_vis_{match_key}_{j['nombre']}"
-                )
-                if ausente: aus_visita_new.append(j['nombre'])
+        if jug_visita:
+            aus_visita_new = _render_xi_col(jug_visita, alin_prev['aus_visita'], 'vis', visita)
         else:
-            st.caption("Sin estrellas definidas")
+            st.caption("Sin titulares definidos")
+
+    if st.button("↩️ Restablecer alineación titular", key=f"reset_xi_{match_key}"):
+        st.session_state.alineaciones[match_key] = {'aus_local': [], 'aus_visita': []}
+        st.rerun()
 
     # Guardar alineación en session_state en tiempo real
     st.session_state.alineaciones[match_key] = {
-        'aus_local': aus_local_new,
-        'aus_visita': aus_visita_new,
+        'aus_local': list(aus_local_new),
+        'aus_visita': list(aus_visita_new),
     }
     hay_ajuste = bool(aus_local_new or aus_visita_new)
 
