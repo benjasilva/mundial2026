@@ -670,20 +670,20 @@ ONCE_TITULAR = {
     {'nombre':'Danilo',            'pos':'DEF','impacto_atq':0.05},
     {'nombre':'Marquinhos',        'pos':'DEF','impacto_atq':0.04},
     {'nombre':'Gabriel Magalhães', 'pos':'DEF','impacto_atq':0.04},
-    {'nombre':'Wendell',           'pos':'DEF','impacto_atq':0.05},
+    {'nombre':'Alex Sandro',       'pos':'DEF','impacto_atq':0.05},
     {'nombre':'Casemiro',          'pos':'MED','impacto_atq':0.06},
     {'nombre':'Bruno Guimarães',   'pos':'MED','impacto_atq':0.10},
     {'nombre':'Lucas Paquetá',     'pos':'MED','impacto_atq':0.12},
-    {'nombre':'Rodrygo',           'pos':'DEL','impacto_atq':0.12},
-    {'nombre':'Endrick',           'pos':'DEL','impacto_atq':0.10},
+    {'nombre':'Rayan',             'pos':'DEL','impacto_atq':0.10},  # Rodrygo (ACL) out; Raphinha lesión
+    {'nombre':'Matheus Cunha',     'pos':'DEL','impacto_atq':0.12},
     {'nombre':'Vinicius Jr.',      'pos':'DEL','impacto_atq':0.24},
  ]},
  'Canadá': {'formacion':'4-3-3','jugadores':[
     {'nombre':'Dayne St. Clair',   'pos':'POR','impacto_atq':0.01},
-    {'nombre':'Richie Laryea',     'pos':'DEF','impacto_atq':0.06},
+    {'nombre':'Alistair Johnston', 'pos':'DEF','impacto_atq':0.05},  # Davies (lesión) no jugó
     {'nombre':'Steven Vitória',    'pos':'DEF','impacto_atq':0.03},
     {'nombre':'Kamal Miller',      'pos':'DEF','impacto_atq':0.03},
-    {'nombre':'Alphonso Davies',   'pos':'DEF','impacto_atq':0.22},
+    {'nombre':'Richie Laryea',     'pos':'DEF','impacto_atq':0.07},  # jugó LB en lugar de Davies
     {'nombre':'Stephen Eustáquio', 'pos':'MED','impacto_atq':0.09},
     {'nombre':'Samuel Piette',     'pos':'MED','impacto_atq':0.06},
     {'nombre':'Ismael Koné',       'pos':'MED','impacto_atq':0.08},
@@ -706,7 +706,7 @@ ONCE_TITULAR = {
  ]},
  'Costa de Marfil': {'formacion':'4-3-3','jugadores':[
     {'nombre':'Yahia Fofana',      'pos':'POR','impacto_atq':0.01},
-    {'nombre':'Serge Aurier',      'pos':'DEF','impacto_atq':0.07},
+    {'nombre':'Wilfried Singo',    'pos':'DEF','impacto_atq':0.07},  # Aurier no nominado
     {'nombre':'Evan Ndicka',       'pos':'DEF','impacto_atq':0.04},
     {'nombre':'Odilon Kossounou',  'pos':'DEF','impacto_atq':0.04},
     {'nombre':'Ghislain Konan',    'pos':'DEF','impacto_atq':0.06},
@@ -714,7 +714,7 @@ ONCE_TITULAR = {
     {'nombre':'Seko Fofana',       'pos':'MED','impacto_atq':0.10},
     {'nombre':'Ibrahim Sangaré',   'pos':'MED','impacto_atq':0.07},
     {'nombre':'Nicolas Pépé',      'pos':'DEL','impacto_atq':0.14},
-    {'nombre':'Sébastien Haller',  'pos':'DEL','impacto_atq':0.18},
+    {'nombre':'Evann Guessand',    'pos':'DEL','impacto_atq':0.16},  # Haller no nominado
     {'nombre':'Simon Adingra',     'pos':'DEL','impacto_atq':0.10},
  ]},
  'Croacia': {'formacion':'4-2-3-1','jugadores':[
@@ -829,8 +829,8 @@ ONCE_TITULAR = {
     {'nombre':'Yuto Nagatomo',     'pos':'DEF','impacto_atq':0.05},
     {'nombre':'Wataru Endo',       'pos':'MED','impacto_atq':0.07},
     {'nombre':'Hidemasa Morita',   'pos':'MED','impacto_atq':0.07},
-    {'nombre':'Junya Ito',         'pos':'MED','impacto_atq':0.12},
-    {'nombre':'Kaoru Mitoma',      'pos':'DEL','impacto_atq':0.18},
+    {'nombre':'Junya Ito',         'pos':'MED','impacto_atq':0.10},  # absorbió rol izquierdo de Mitoma
+    {'nombre':'Takefusa Kubo',     'pos':'DEL','impacto_atq':0.18},  # Mitoma (lesión) out
     {'nombre':'Takumi Minamino',   'pos':'DEL','impacto_atq':0.14},
     {'nombre':'Ritsu Doan',        'pos':'DEL','impacto_atq':0.12},
  ]},
@@ -874,17 +874,17 @@ ONCE_TITULAR = {
     {'nombre':'Erling Haaland',    'pos':'DEL','impacto_atq':0.38},
  ]},
  'Países Bajos': {'formacion':'4-3-3','jugadores':[
-    {'nombre':'Bart Verbruggen',   'pos':'POR','impacto_atq':0.01},
-    {'nombre':'Denzel Dumfries',   'pos':'DEF','impacto_atq':0.09},
-    {'nombre':'Virgil van Dijk',   'pos':'DEF','impacto_atq':0.05},
-    {'nombre':'Micky van de Ven',  'pos':'DEF','impacto_atq':0.03},
-    {'nombre':'Nathan Aké',        'pos':'DEF','impacto_atq':0.05},
-    {'nombre':'Ryan Gravenberch',  'pos':'MED','impacto_atq':0.09},
-    {'nombre':'Tijjani Reijnders', 'pos':'MED','impacto_atq':0.10},
-    {'nombre':'Frenkie de Jong',   'pos':'MED','impacto_atq':0.10},
-    {'nombre':'Xavi Simons',       'pos':'DEL','impacto_atq':0.14},
-    {'nombre':'Cody Gakpo',        'pos':'DEL','impacto_atq':0.18},
-    {'nombre':'Memphis Depay',     'pos':'DEL','impacto_atq':0.14},
+    {'nombre':'Bart Verbruggen',    'pos':'POR','impacto_atq':0.01},
+    {'nombre':'Denzel Dumfries',    'pos':'DEF','impacto_atq':0.09},
+    {'nombre':'Jan Paul van Hecke', 'pos':'DEF','impacto_atq':0.03},  # de Ligt (lesión) out; Aké fuera del XI
+    {'nombre':'Virgil van Dijk',    'pos':'DEF','impacto_atq':0.05},
+    {'nombre':'Micky van de Ven',   'pos':'DEF','impacto_atq':0.06},
+    {'nombre':'Ryan Gravenberch',   'pos':'MED','impacto_atq':0.09},
+    {'nombre':'Tijjani Reijnders',  'pos':'MED','impacto_atq':0.10},
+    {'nombre':'Frenkie de Jong',    'pos':'MED','impacto_atq':0.10},
+    {'nombre':'Donyell Malen',      'pos':'DEL','impacto_atq':0.12},  # Xavi Simons (ACL) out
+    {'nombre':'Cody Gakpo',         'pos':'DEL','impacto_atq':0.18},
+    {'nombre':'Memphis Depay',      'pos':'DEL','impacto_atq':0.14},
  ]},
  'Paraguay': {'formacion':'4-3-3','jugadores':[
     {'nombre':'Antony Silva',      'pos':'POR','impacto_atq':0.01},
