@@ -639,18 +639,18 @@ ONCE_TITULAR = {
     {'nombre':'Marko Arnautović',      'pos':'DEL','impacto_atq':0.14},
     {'nombre':'Michael Gregoritsch',   'pos':'DEL','impacto_atq':0.08},
  ]},
- 'Bélgica': {'formacion':'4-3-3','jugadores':[
-    {'nombre':'Koen Casteels',    'pos':'POR','impacto_atq':0.01},
-    {'nombre':'Timothy Castagne', 'pos':'DEF','impacto_atq':0.07},
-    {'nombre':'Wout Faes',        'pos':'DEF','impacto_atq':0.03},
-    {'nombre':'Jan Vertonghen',   'pos':'DEF','impacto_atq':0.03},
-    {'nombre':'Yannick Carrasco', 'pos':'DEF','impacto_atq':0.08},
-    {'nombre':'Axel Witsel',      'pos':'MED','impacto_atq':0.05},
-    {'nombre':'Kevin De Bruyne',  'pos':'MED','impacto_atq':0.22},
-    {'nombre':'Thorgan Hazard',   'pos':'MED','impacto_atq':0.09},
-    {'nombre':'Dries Mertens',    'pos':'DEL','impacto_atq':0.10},
-    {'nombre':'Romelu Lukaku',    'pos':'DEL','impacto_atq':0.16},
-    {'nombre':'Leandro Trossard', 'pos':'DEL','impacto_atq':0.10},
+ 'Bélgica': {'formacion':'4-2-3-1','jugadores':[  # Forza: XI vs Nueva Zelanda
+    {'nombre':'Thibaut Courtois',   'pos':'POR','impacto_atq':0.02},
+    {'nombre':'Timothy Castagne',   'pos':'DEF','impacto_atq':0.07},
+    {'nombre':'Brandon Mechele',    'pos':'DEF','impacto_atq':0.03},
+    {'nombre':'Arthur Theate',      'pos':'DEF','impacto_atq':0.03},
+    {'nombre':'Maxim De Cuyper',    'pos':'DEF','impacto_atq':0.06},
+    {'nombre':'Hans Vanaken',       'pos':'MED','impacto_atq':0.08},
+    {'nombre':'Youri Tielemans',    'pos':'MED','impacto_atq':0.09},
+    {'nombre':'Leandro Trossard',   'pos':'MED','impacto_atq':0.12},
+    {'nombre':'Kevin De Bruyne',    'pos':'MED','impacto_atq':0.22},
+    {'nombre':'Jérémy Doku',        'pos':'MED','impacto_atq':0.14},
+    {'nombre':'Charles De Ketelaere','pos':'DEL','impacto_atq':0.14},
  ]},
  'Bosnia y Herzegovina': {'formacion':'4-2-3-1','jugadores':[
     {'nombre':'Vedran Kjosak',       'pos':'POR','impacto_atq':0.01},
@@ -769,31 +769,31 @@ ONCE_TITULAR = {
     {'nombre':'Álvaro Morata',     'pos':'DEL','impacto_atq':0.14},
     {'nombre':'Nico Williams',     'pos':'DEL','impacto_atq':0.14},
  ]},
- 'Estados Unidos': {'formacion':'4-3-3','jugadores':[
-    {'nombre':'Matt Turner',       'pos':'POR','impacto_atq':0.01},
-    {'nombre':'Sergino Dest',      'pos':'DEF','impacto_atq':0.07},
-    {'nombre':'Miles Robinson',    'pos':'DEF','impacto_atq':0.03},
-    {'nombre':'Chris Richards',    'pos':'DEF','impacto_atq':0.04},
-    {'nombre':'Antonee Robinson',  'pos':'DEF','impacto_atq':0.07},
-    {'nombre':'Tyler Adams',       'pos':'MED','impacto_atq':0.07},
-    {'nombre':'Weston McKennie',   'pos':'MED','impacto_atq':0.10},
-    {'nombre':'Yunus Musah',       'pos':'MED','impacto_atq':0.08},
-    {'nombre':'Christian Pulisic', 'pos':'DEL','impacto_atq':0.24},
-    {'nombre':'Gio Reyna',         'pos':'DEL','impacto_atq':0.12},
-    {'nombre':'Josh Sargent',      'pos':'DEL','impacto_atq':0.10},
+ 'Estados Unidos': {'formacion':'4-3-3','jugadores':[  # Forza: XI vs Turquía (McKenzie lesión)
+    {'nombre':'Matt Turner',        'pos':'POR','impacto_atq':0.01},  # #1
+    {'nombre':'Joe Scally',         'pos':'DEF','impacto_atq':0.06},  # #23
+    {'nombre':'Miles Robinson',     'pos':'DEF','impacto_atq':0.04},  # #12
+    {'nombre':'Mark McKenzie',      'pos':'DEF','impacto_atq':0.03},  # #22 — lesión, puede no jugar
+    {'nombre':'Chris Trusty',       'pos':'DEF','impacto_atq':0.04},  # #6
+    {'nombre':'Weston McKennie',    'pos':'MED','impacto_atq':0.10},  # #8
+    {'nombre':'Caleb Berhalter',    'pos':'MED','impacto_atq':0.07},  # #14
+    {'nombre':'Gio Reyna',          'pos':'MED','impacto_atq':0.12},  # #7
+    {'nombre':'Brenden Aaronson',   'pos':'DEL','impacto_atq':0.09},  # #11
+    {'nombre':'Ricardo Pepi',       'pos':'DEL','impacto_atq':0.14},  # #9
+    {'nombre':'Tim Weah',           'pos':'DEL','impacto_atq':0.12},  # #21
  ]},
- 'Francia': {'formacion':'4-2-3-1','jugadores':[
-    {'nombre':'Mike Maignan',      'pos':'POR','impacto_atq':0.01},
-    {'nombre':'Jules Koundé',      'pos':'DEF','impacto_atq':0.07},
-    {'nombre':'Dayot Upamecano',   'pos':'DEF','impacto_atq':0.03},
-    {'nombre':'William Saliba',    'pos':'DEF','impacto_atq':0.03},
-    {'nombre':'Théo Hernández',    'pos':'DEF','impacto_atq':0.08},
-    {'nombre':'Aurélien Tchouaméni','pos':'MED','impacto_atq':0.07},
-    {'nombre':'Adrien Rabiot',     'pos':'MED','impacto_atq':0.08},
-    {'nombre':'Antoine Griezmann', 'pos':'MED','impacto_atq':0.14},
-    {'nombre':'Ousmane Dembélé',   'pos':'DEL','impacto_atq':0.14},
-    {'nombre':'Kylian Mbappé',     'pos':'DEL','impacto_atq':0.30},
-    {'nombre':'Marcus Thuram',     'pos':'DEL','impacto_atq':0.12},
+ 'Francia': {'formacion':'4-2-3-1','jugadores':[  # Forza: esperada vs Suecia (Thuram+Kanté fuera)
+    {'nombre':'Mike Maignan',       'pos':'POR','impacto_atq':0.01},  # #16
+    {'nombre':'Jules Koundé',       'pos':'DEF','impacto_atq':0.07},  # #5
+    {'nombre':'Dayot Upamecano',    'pos':'DEF','impacto_atq':0.03},  # #4
+    {'nombre':'Lacroix',            'pos':'DEF','impacto_atq':0.03},  # #26 (Saliba/Hernández fuera)
+    {'nombre':'Lucas Digne',        'pos':'DEF','impacto_atq':0.06},  # #3
+    {'nombre':'Aurélien Tchouaméni','pos':'MED','impacto_atq':0.07},  # #8
+    {'nombre':'Adrien Rabiot',      'pos':'MED','impacto_atq':0.08},  # #14
+    {'nombre':'Ousmane Dembélé',    'pos':'DEL','impacto_atq':0.14},  # #7
+    {'nombre':'Michael Olise',      'pos':'DEL','impacto_atq':0.14},  # #11
+    {'nombre':'Désiré Doué',        'pos':'DEL','impacto_atq':0.12},  # #20
+    {'nombre':'Kylian Mbappé',      'pos':'DEL','impacto_atq':0.30},  # #10
  ]},
  'Ghana': {'formacion':'4-2-3-1','jugadores':[
     {'nombre':'Lawrence Ati-Zigi', 'pos':'POR','impacto_atq':0.01},
@@ -808,18 +808,18 @@ ONCE_TITULAR = {
     {'nombre':'André Ayew',        'pos':'DEL','impacto_atq':0.14},
     {'nombre':'Antoine Semenyo',   'pos':'DEL','impacto_atq':0.10},
  ]},
- 'Inglaterra': {'formacion':'4-3-3','jugadores':[
-    {'nombre':'Jordan Pickford',   'pos':'POR','impacto_atq':0.01},
-    {'nombre':'Kyle Walker',       'pos':'DEF','impacto_atq':0.06},
-    {'nombre':'John Stones',       'pos':'DEF','impacto_atq':0.04},
-    {'nombre':'Harry Maguire',     'pos':'DEF','impacto_atq':0.04},
-    {'nombre':'Kieran Trippier',   'pos':'DEF','impacto_atq':0.08},
-    {'nombre':'Declan Rice',       'pos':'MED','impacto_atq':0.08},
-    {'nombre':'Jude Bellingham',   'pos':'MED','impacto_atq':0.20},
-    {'nombre':'Bukayo Saka',       'pos':'DEL','impacto_atq':0.16},
-    {'nombre':'Phil Foden',        'pos':'DEL','impacto_atq':0.16},
-    {'nombre':'Harry Kane',        'pos':'DEL','impacto_atq':0.24},
-    {'nombre':'Marcus Rashford',   'pos':'DEL','impacto_atq':0.12},
+ 'Inglaterra': {'formacion':'4-2-3-1','jugadores':[  # Forza: XI vs Panamá
+    {'nombre':'Jordan Pickford',   'pos':'POR','impacto_atq':0.01},  # #1
+    {'nombre':'Ezri Konsa',        'pos':'DEF','impacto_atq':0.06},  # #2 RB
+    {'nombre':'Jarell Quansah',    'pos':'DEF','impacto_atq':0.03},  # #26 CB
+    {'nombre':'Marc Guéhi',        'pos':'DEF','impacto_atq':0.03},  # #6 CB
+    {'nombre':"O'Reilly",          'pos':'DEF','impacto_atq':0.06},  # #3 LB
+    {'nombre':'Anderson',          'pos':'MED','impacto_atq':0.08},  # #8
+    {'nombre':'Jude Bellingham',   'pos':'MED','impacto_atq':0.20},  # #10
+    {'nombre':'Bukayo Saka',       'pos':'DEL','impacto_atq':0.16},  # #7
+    {'nombre':'Rogers',            'pos':'DEL','impacto_atq':0.12},  # #17
+    {'nombre':'Marcus Rashford',   'pos':'DEL','impacto_atq':0.12},  # #11
+    {'nombre':'Harry Kane',        'pos':'DEL','impacto_atq':0.24},  # #9
  ]},
  'Japón': {'formacion':'4-2-3-1','jugadores':[
     {'nombre':'Shuichi Gonda',     'pos':'POR','impacto_atq':0.01},
@@ -912,31 +912,31 @@ ONCE_TITULAR = {
     {'nombre':'Cristiano Ronaldo', 'pos':'DEL','impacto_atq':0.22},
     {'nombre':'Diogo Jota',        'pos':'DEL','impacto_atq':0.14},
  ]},
- 'R. D. del Congo': {'formacion':'4-3-3','jugadores':[
-    {'nombre':'Joël Kiassumbua',   'pos':'POR','impacto_atq':0.01},
-    {'nombre':'Chancel Mbemba',    'pos':'DEF','impacto_atq':0.04},
-    {'nombre':'Marcel Tisserand',  'pos':'DEF','impacto_atq':0.03},
-    {'nombre':'Ley Matungulu',     'pos':'DEF','impacto_atq':0.03},
-    {'nombre':'Arthur Masuaku',    'pos':'DEF','impacto_atq':0.06},
-    {'nombre':'Samuel Moutoussamy','pos':'MED','impacto_atq':0.07},
-    {'nombre':'Silas Mvumpa',      'pos':'MED','impacto_atq':0.08},
-    {'nombre':'Théo Bongonda',     'pos':'MED','impacto_atq':0.09},
-    {'nombre':'Dodi Lukébakio',    'pos':'DEL','impacto_atq':0.18},
-    {'nombre':'Cédric Bakambu',    'pos':'DEL','impacto_atq':0.14},
-    {'nombre':'Yoane Wissa',       'pos':'DEL','impacto_atq':0.14},
+ 'R. D. del Congo': {'formacion':'4-3-3','jugadores':[  # Forza: XI vs Uzbekistán
+    {'nombre':'Joël Mpasi',        'pos':'POR','impacto_atq':0.01},  # #1
+    {'nombre':'Wan-Bissaka',       'pos':'DEF','impacto_atq':0.06},  # #2
+    {'nombre':'Axel Tuanzebe',     'pos':'DEF','impacto_atq':0.03},  # #4
+    {'nombre':'Chancel Mbemba',    'pos':'DEF','impacto_atq':0.04},  # #22
+    {'nombre':'Arthur Masuaku',    'pos':'DEF','impacto_atq':0.06},  # #26
+    {'nombre':'Samuel Moutoussamy','pos':'MED','impacto_atq':0.07},  # #8
+    {'nombre':'Sadiki',            'pos':'MED','impacto_atq':0.07},  # #14
+    {'nombre':'Cipenga',           'pos':'MED','impacto_atq':0.08},  # #9
+    {'nombre':'Yoane Wissa',       'pos':'DEL','impacto_atq':0.16},  # #20
+    {'nombre':'Cédric Bakambu',    'pos':'DEL','impacto_atq':0.14},  # #17
+    {'nombre':'Dodi Lukébakio',    'pos':'DEL','impacto_atq':0.16},  # suplente habitual
  ]},
- 'Senegal': {'formacion':'4-3-3','jugadores':[
-    {'nombre':'Édouard Mendy',     'pos':'POR','impacto_atq':0.02},
-    {'nombre':'Bouna Sarr',        'pos':'DEF','impacto_atq':0.05},
-    {'nombre':'Kalidou Koulibaly', 'pos':'DEF','impacto_atq':0.05},
-    {'nombre':'Abdou Diallo',      'pos':'DEF','impacto_atq':0.04},
-    {'nombre':'Youssouf Sabaly',   'pos':'DEF','impacto_atq':0.06},
-    {'nombre':'Pape Matar Sarr',   'pos':'MED','impacto_atq':0.10},
-    {'nombre':'Idrissa Gueye',     'pos':'MED','impacto_atq':0.07},
-    {'nombre':'Nampalys Mendy',    'pos':'MED','impacto_atq':0.06},
-    {'nombre':'Ismaïla Sarr',      'pos':'DEL','impacto_atq':0.14},
-    {'nombre':'Sadio Mané',        'pos':'DEL','impacto_atq':0.26},
-    {'nombre':'Boulaye Dia',       'pos':'DEL','impacto_atq':0.12},
+ 'Senegal': {'formacion':'4-2-3-1','jugadores':[  # Forza: XI vs Irak (Mendy lesionado)
+    {'nombre':'Sarr',           'pos':'POR','impacto_atq':0.01},  # #18, Mendy fuera por lesión
+    {'nombre':'Ismail Jakobs',  'pos':'DEF','impacto_atq':0.06},  # #14
+    {'nombre':'Niakhaté',       'pos':'DEF','impacto_atq':0.03},  # #19 Moussa Niakhaté
+    {'nombre':'Seck',           'pos':'DEF','impacto_atq':0.03},  # #4
+    {'nombre':'Diatta',         'pos':'DEF','impacto_atq':0.05},  # #15 Lamine Diatta
+    {'nombre':'Diarra',         'pos':'MED','impacto_atq':0.06},  # #21
+    {'nombre':'Idrissa Gueye',  'pos':'MED','impacto_atq':0.07},  # #5
+    {'nombre':'Camara',         'pos':'MED','impacto_atq':0.07},  # #8
+    {'nombre':'Mbaye',          'pos':'MED','impacto_atq':0.10},  # #20
+    {'nombre':'Sadio Mané',     'pos':'DEL','impacto_atq':0.26},  # #10
+    {'nombre':'Diaw',           'pos':'DEL','impacto_atq':0.10},  # #23
  ]},
  'Sudáfrica': {'formacion':'4-3-3','jugadores':[
     {'nombre':'Ronwen Williams',   'pos':'POR','impacto_atq':0.02},
@@ -951,18 +951,18 @@ ONCE_TITULAR = {
     {'nombre':'Lyle Foster',       'pos':'DEL','impacto_atq':0.14},
     {'nombre':'Bongokuhle Hlongwane','pos':'DEL','impacto_atq':0.10},
  ]},
- 'Suecia': {'formacion':'4-3-3','jugadores':[
-    {'nombre':'Robin Olsen',       'pos':'POR','impacto_atq':0.01},
-    {'nombre':'Emil Krafth',       'pos':'DEF','impacto_atq':0.05},
-    {'nombre':'Victor Lindelöf',   'pos':'DEF','impacto_atq':0.04},
-    {'nombre':'Isak Hien',         'pos':'DEF','impacto_atq':0.04},
-    {'nombre':'Ludwig Augustinsson','pos':'DEF','impacto_atq':0.05},
-    {'nombre':'Dejan Kulusevski',  'pos':'MED','impacto_atq':0.14},
-    {'nombre':'Emil Forsberg',     'pos':'MED','impacto_atq':0.12},
-    {'nombre':'Mattias Svanberg',  'pos':'MED','impacto_atq':0.07},
-    {'nombre':'Anthony Elanga',    'pos':'DEL','impacto_atq':0.12},
-    {'nombre':'Viktor Gyökeres',   'pos':'DEL','impacto_atq':0.18},
-    {'nombre':'Alexander Isak',    'pos':'DEL','impacto_atq':0.22},
+ 'Suecia': {'formacion':'3-4-3','jugadores':[  # Forza: esperada vs Francia (Lindelöf+Hien fuera)
+    {'nombre':'Widell Zetterström', 'pos':'POR','impacto_atq':0.01},  # #1
+    {'nombre':'Starfelt',           'pos':'DEF','impacto_atq':0.03},  # #15
+    {'nombre':'Lagerbielke',        'pos':'DEF','impacto_atq':0.03},  # #2
+    {'nombre':'Gudmundsson',        'pos':'DEF','impacto_atq':0.05},  # #5 (WB o CB)
+    {'nombre':'Bernhardsson',       'pos':'MED','impacto_atq':0.07},  # #21
+    {'nombre':'Bergvall',           'pos':'MED','impacto_atq':0.10},  # #7
+    {'nombre':'Ayari',              'pos':'MED','impacto_atq':0.07},  # #18
+    {'nombre':'Stroud',             'pos':'MED','impacto_atq':0.06},  # #24
+    {'nombre':'Alexander Isak',     'pos':'DEL','impacto_atq':0.22},  # #9
+    {'nombre':'Viktor Gyökeres',    'pos':'DEL','impacto_atq':0.18},  # #17
+    {'nombre':'Anthony Elanga',     'pos':'DEL','impacto_atq':0.12},  # #11
  ]},
  'Suiza': {'formacion':'4-2-3-1','jugadores':[
     {'nombre':'Yann Sommer',       'pos':'POR','impacto_atq':0.01},
