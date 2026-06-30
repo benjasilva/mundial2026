@@ -208,10 +208,10 @@ UTC_OFFSET = -4  # Chile continental en junio/julio (UTC-4)
 FIXTURE_R32 = {
     # Fuente: FIFA oficial / Wikipedia 2026 FIFA World Cup knockout stage
     # Fechas en hora Chile (UTC-4)
-    73: ("2026-06-28", "Sudáfrica",           "Canadá",               None, None),  # 15:00
-    74: ("2026-06-29", "Alemania",             "Paraguay",             None, None),  # 16:30
-    75: ("2026-06-29", "Países Bajos",         "Marruecos",            None, None),  # 21:00
-    76: ("2026-06-29", "Brasil",               "Japón",                None, None),  # 13:00
+    73: ("2026-06-28", "Sudáfrica",           "Canadá",               0,    1),     # 15:00 → Canadá 1-0
+    74: ("2026-06-29", "Alemania",             "Paraguay",             1,    1),     # 16:30 → 1-1 (pen: Paraguay 4-3)
+    75: ("2026-06-29", "Países Bajos",         "Marruecos",            1,    1),     # 21:00 → 1-1 (pen: Marruecos 3-2)
+    76: ("2026-06-29", "Brasil",               "Japón",                2,    1),     # 13:00 → Brasil 2-1
     77: ("2026-06-30", "Francia",              "Suecia",               None, None),  # 17:00
     78: ("2026-06-30", "Costa de Marfil",      "Noruega",              None, None),  # 13:00
     79: ("2026-06-30", "México",               "Ecuador",              None, None),  # 21:00
