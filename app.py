@@ -207,27 +207,28 @@ UTC_OFFSET = -4  # Chile continental en junio/julio (UTC-4)
 # Dejar local/visita en None mientras no se confirmen equipos
 FIXTURE_R32 = {
     # Fuente: fixture oficial FIFA Copa Mundial 2026
-    73: ("2026-06-28", "Sudáfrica",           "Canadá",               0,    1),     # → Canadá 1-0
-    74: ("2026-06-29", "Alemania",            "Paraguay",             None, None),  # pendiente
-    75: ("2026-06-29", "Países Bajos",        "Marruecos",            None, None),  # pendiente
-    76: ("2026-06-29", "Brasil",              "Japón",                None, None),  # pendiente
-    77: ("2026-06-30", "Francia",             "Suecia",               None, None),  # hoy
-    78: ("2026-06-30", "Costa de Marfil",     "Noruega",              None, None),  # hoy
-    79: ("2026-06-30", "México",              "Ecuador",              None, None),  # hoy
-    80: ("2026-07-01", "Inglaterra",          "R. D. del Congo",      None, None),
-    81: ("2026-07-01", "Estados Unidos",      "Bosnia y Herzegovina", None, None),
-    82: ("2026-07-01", "Bélgica",             "Senegal",              None, None),
-    83: ("2026-07-02", "Portugal",            "Croacia",              None, None),
-    84: ("2026-07-02", "España",              "Austria",              None, None),
-    85: ("2026-07-02", "Suiza",               "Argelia",              None, None),
-    86: ("2026-07-03", "Argentina",           "Cabo Verde",           None, None),
-    87: ("2026-07-03", "Colombia",            "Ghana",                None, None),
-    88: ("2026-07-03", "Australia",           "Egipto",               None, None),
+    73: ("2026-06-28", "Sudáfrica",           "Canadá",               0,    1),
+    74: ("2026-06-29", "Alemania",            "Paraguay",             1,    1),  # Paraguay 4-3 pens
+    75: ("2026-06-29", "Países Bajos",        "Marruecos",            1,    1),  # Marruecos 3-2 pens
+    76: ("2026-06-29", "Brasil",              "Japón",                2,    1),
+    77: ("2026-06-30", "Francia",             "Suecia",               3,    0),
+    78: ("2026-06-30", "Costa de Marfil",     "Noruega",              1,    2),
+    79: ("2026-06-30", "México",              "Ecuador",              2,    0),
+    80: ("2026-07-01", "Inglaterra",          "R. D. del Congo",      2,    1),
+    81: ("2026-07-01", "Estados Unidos",      "Bosnia y Herzegovina", 2,    0),
+    82: ("2026-07-01", "Bélgica",             "Senegal",              3,    2),
+    83: ("2026-07-02", "Portugal",            "Croacia",              2,    1),
+    84: ("2026-07-02", "España",              "Austria",              3,    0),
+    85: ("2026-07-02", "Suiza",               "Argelia",              2,    0),
+    86: ("2026-07-03", "Argentina",           "Cabo Verde",           3,    2),
+    87: ("2026-07-03", "Colombia",            "Ghana",                1,    0),
+    88: ("2026-07-03", "Australia",           "Egipto",               1,    1),  # Egipto 4-2 pens
 }
 # R16 — octavos de final
+# Equipos se resuelven automáticamente desde get_winner(); solo llenar cuando resultado esté disponible
 FIXTURE_R16 = {
-    89:  ("2026-07-04", None, None, None, None),
-    90:  ("2026-07-04", None, None, None, None),
+    89:  ("2026-07-04", "Canadá",    "Marruecos", 0,    3),
+    90:  ("2026-07-04", "Paraguay",  "Francia",   0,    1),
     91:  ("2026-07-05", None, None, None, None),
     92:  ("2026-07-05", None, None, None, None),
     93:  ("2026-07-06", None, None, None, None),
@@ -253,13 +254,37 @@ FIXTURE_FINAL = {
     104: ("2026-07-19", None, None, None, None),  # Final
 }
 
-# Bracket de R16/QF/SF/Final (qué partidos enfrentan ganadores de qué matches)
-BRACKET_R16_LABELS = [(89,"M73","M74"),(90,"M75","M76"),(91,"M77","M78"),(92,"M79","M80"),
-                      (93,"M81","M82"),(94,"M83","M84"),(95,"M85","M86"),(96,"M87","M88")]
+# Bracket de R16/QF/SF/Final — qué R32 feedan cada partido de R16
+# Formato: (mnum_r16, "M<local_r32>", "M<visita_r32>")
+BRACKET_R16_LABELS = [(89,"M73","M75"),(90,"M74","M77"),(91,"M76","M78"),(92,"M79","M80"),
+                      (93,"M83","M84"),(94,"M81","M82"),(95,"M86","M88"),(96,"M85","M87")]
 BRACKET_QF_LABELS  = [(97,"M89","M90"),(98,"M91","M92"),(99,"M93","M94"),(100,"M95","M96")]
 BRACKET_SF_LABELS  = [(101,"M97","M98"),(102,"M99","M100")]
 BRACKET_3RD_LABEL  = [(103,"M101","M102")]  # 3er puesto
 BRACKET_F_LABEL    = [(104,"M101","M102")]  # Final
+
+# Ganadores de partidos decididos por penales (gl==gv en el fixture)
+GANADORES_PENALES = {
+    74: "Paraguay",   # Alemania 1-1 Paraguay, Paraguay 4-3 pens
+    75: "Marruecos",  # Países Bajos 1-1 Marruecos, Marruecos 3-2 pens
+    88: "Egipto",     # Australia 1-1 Egipto, Egipto 4-2 pens
+}
+
+def get_winner(mnum):
+    """Devuelve el equipo ganador de un partido KO. Penales → GANADORES_PENALES."""
+    if mnum in GANADORES_PENALES:
+        return GANADORES_PENALES[mnum]
+    if   mnum <= 88:  fixture = FIXTURE_R32
+    elif mnum <= 96:  fixture = FIXTURE_R16
+    elif mnum <= 100: fixture = FIXTURE_QF
+    else:             fixture = FIXTURE_SF
+    entry = fixture.get(mnum)
+    if not entry: return None
+    _, loc, vis, gl, gv = entry
+    if None in (loc, vis, gl, gv): return None
+    if gl > gv: return loc
+    if gv > gl: return vis
+    return None  # empate sin penal registrado → agregar a GANADORES_PENALES
 
 # =====================================================================
 # BRACKET OFICIAL R32 — Copa Mundial 2026
@@ -1738,14 +1763,14 @@ with tab_fix:
     st.markdown("---")
 
     # ── 🔵 OCTAVOS DE FINAL — R16 ────────────────────────────────────
-    with st.expander("🔵 Octavos de Final — 8 partidos  ·  ~6–9 jul", expanded=False):
+    with st.expander("🔵 Octavos de Final — 8 partidos  ·  4–7 jul", expanded=True):
         st.caption("Ganadores de los dieciseisavos. Equipos se confirman a medida que avance el torneo.")
         r16_por_fecha = {}
         for mnum, lbl1, lbl2 in BRACKET_R16_LABELS:
             fecha_r16, loc_m, vis_m, gl_m, gv_m = FIXTURE_R16[mnum]
-            t1 = loc_m or f"Gan. {lbl1}"
-            t2 = vis_m or f"Gan. {lbl2}"
-            # si hay resultado en extra_lkp (cuando teams ya son reales)
+            m1, m2 = int(lbl1[1:]), int(lbl2[1:])
+            t1 = loc_m or get_winner(m1) or f"Gan. {lbl1}"
+            t2 = vis_m or get_winner(m2) or f"Gan. {lbl2}"
             gl_r, gv_r = extra_lkp.get((t1, t2), (gl_m, gv_m))
             r16_por_fecha.setdefault(fecha_r16, []).append((mnum, t1, t2, gl_r, gv_r))
         for fecha in sorted(r16_por_fecha.keys()):
@@ -1757,13 +1782,14 @@ with tab_fix:
                 _render_match_row(t1, t2, fecha, gl=gl, gv=gv, espn_info=espn_info)
 
     # ── 🟣 CUARTOS DE FINAL — QF ──────────────────────────────────────
-    with st.expander("🟣 Cuartos de Final — 4 partidos  ·  ~11–12 jul", expanded=False):
+    with st.expander("🟣 Cuartos de Final — 4 partidos  ·  9–11 jul", expanded=False):
         st.caption("Ganadores de los octavos.")
         qf_por_fecha = {}
         for mnum, lbl1, lbl2 in BRACKET_QF_LABELS:
             fecha_qf, loc_m, vis_m, gl_m, gv_m = FIXTURE_QF[mnum]
-            t1 = loc_m or f"Gan. {lbl1}"
-            t2 = vis_m or f"Gan. {lbl2}"
+            m1, m2 = int(lbl1[1:]), int(lbl2[1:])
+            t1 = loc_m or get_winner(m1) or f"Gan. {lbl1}"
+            t2 = vis_m or get_winner(m2) or f"Gan. {lbl2}"
             gl_r, gv_r = extra_lkp.get((t1, t2), (gl_m, gv_m))
             qf_por_fecha.setdefault(fecha_qf, []).append((mnum, t1, t2, gl_r, gv_r))
         for fecha in sorted(qf_por_fecha.keys()):
@@ -1775,11 +1801,12 @@ with tab_fix:
                 _render_match_row(t1, t2, fecha, gl=gl, gv=gv, espn_info=espn_info)
 
     # ── 🔴 SEMIFINALES ────────────────────────────────────────────────
-    with st.expander("🔴 Semifinales — 2 partidos  ·  ~14–15 jul", expanded=False):
+    with st.expander("🔴 Semifinales — 2 partidos  ·  14–15 jul", expanded=False):
         for mnum, lbl1, lbl2 in BRACKET_SF_LABELS:
             fecha_sf, loc_m, vis_m, gl_m, gv_m = FIXTURE_SF[mnum]
-            t1 = loc_m or f"Gan. {lbl1}"
-            t2 = vis_m or f"Gan. {lbl2}"
+            m1, m2 = int(lbl1[1:]), int(lbl2[1:])
+            t1 = loc_m or get_winner(m1) or f"Gan. {lbl1}"
+            t2 = vis_m or get_winner(m2) or f"Gan. {lbl2}"
             gl_r, gv_r = extra_lkp.get((t1, t2), (gl_m, gv_m))
             estados_dia = get_espn_fecha(fecha_sf)
             espn_info = estados_dia.get((t1,t2)) or estados_dia.get((t2,t1))
@@ -1787,12 +1814,26 @@ with tab_fix:
             st.markdown(f'<span style="color:#6c7086;font-size:.68rem;min-width:28px;display:inline-block">M{mnum}</span>', unsafe_allow_html=True)
             _render_match_row(t1, t2, fecha_sf, gl=gl_r, gv=gv_r, espn_info=espn_info)
 
+    # ── 🥉 TERCER PUESTO ─────────────────────────────────────────────
+    with st.expander("🥉 Tercer Puesto — 18 julio 2026", expanded=False):
+        mnum, lbl1, lbl2 = BRACKET_3RD_LABEL[0]
+        fecha_3, loc_m, vis_m, gl_m, gv_m = FIXTURE_FINAL[mnum]
+        m1, m2 = int(lbl1[1:]), int(lbl2[1:])
+        t1 = loc_m or f"Per. {lbl1}"
+        t2 = vis_m or f"Per. {lbl2}"
+        gl_r, gv_r = extra_lkp.get((t1, t2), (gl_m, gv_m))
+        estados_dia = get_espn_fecha(fecha_3)
+        espn_info = estados_dia.get((t1,t2)) or estados_dia.get((t2,t1))
+        _date_header(fecha_3)
+        _render_match_row(t1, t2, fecha_3, gl=gl_r, gv=gv_r, espn_info=espn_info)
+
     # ── 🏆 FINAL ─────────────────────────────────────────────────────
     with st.expander("🏆 Final — 19 julio 2026 · MetLife Stadium, Nueva Jersey", expanded=False):
         mnum, lbl1, lbl2 = BRACKET_F_LABEL[0]
         fecha_f, loc_m, vis_m, gl_m, gv_m = FIXTURE_FINAL[mnum]
-        t1 = loc_m or f"Gan. {lbl1}"
-        t2 = vis_m or f"Gan. {lbl2}"
+        m1, m2 = int(lbl1[1:]), int(lbl2[1:])
+        t1 = loc_m or get_winner(m1) or f"Gan. {lbl1}"
+        t2 = vis_m or get_winner(m2) or f"Gan. {lbl2}"
         gl_r, gv_r = extra_lkp.get((t1, t2), (gl_m, gv_m))
         estados_dia = get_espn_fecha(fecha_f)
         espn_info = estados_dia.get((t1,t2)) or estados_dia.get((t2,t1))
