@@ -1763,39 +1763,33 @@ with tab_fix:
                 )
         except: pass
 
-    # ── ⚔️ DIECISEISAVOS DE FINAL — R32 (expanded) ───────────────────
-    st.markdown("## ⚔️ Dieciseisavos de Final")
-    st.caption("Ronda de 32 · 16 partidos · Cruces calculados desde standings finales de grupos")
+    # ── ⚔️ DIECISEISAVOS DE FINAL — R32 ─────────────────────────────
+    with st.expander("⚔️ Dieciseisavos de Final — 16 partidos  ·  28 jun–3 jul", expanded=False):
+        st.caption("Ronda de 32 · Cruces calculados desde standings finales de grupos")
 
-    r32_bracket = build_r32_bracket()
-    # Sobreescribir equipos con cualquier dato manual en FIXTURE_R32
-    r32_map = {mnum: (loc, vis, gl, gv)
-               for mnum, (_, loc, vis, gl, gv) in FIXTURE_R32.items()
-               if loc is not None}
+        r32_bracket = build_r32_bracket()
+        r32_map = {mnum: (loc, vis, gl, gv)
+                   for mnum, (_, loc, vis, gl, gv) in FIXTURE_R32.items()
+                   if loc is not None}
 
-    # Agrupar por fecha
-    r32_por_fecha = {}
-    for mnum, t1, t2 in r32_bracket:
-        fecha_r32 = FIXTURE_R32[mnum][0]
-        # Resultado manual tiene precedencia
-        if mnum in r32_map:
-            loc_m, vis_m, gl_m, gv_m = r32_map[mnum]
-            r32_por_fecha.setdefault(fecha_r32, []).append((mnum, loc_m, vis_m, gl_m, gv_m))
-        else:
-            r32_por_fecha.setdefault(fecha_r32, []).append((mnum, t1, t2, None, None))
+        r32_por_fecha = {}
+        for mnum, t1, t2 in r32_bracket:
+            fecha_r32 = FIXTURE_R32[mnum][0]
+            if mnum in r32_map:
+                loc_m, vis_m, gl_m, gv_m = r32_map[mnum]
+                r32_por_fecha.setdefault(fecha_r32, []).append((mnum, loc_m, vis_m, gl_m, gv_m))
+            else:
+                r32_por_fecha.setdefault(fecha_r32, []).append((mnum, t1, t2, None, None))
 
-    for fecha in sorted(r32_por_fecha.keys()):
-        _date_header(fecha)
-        estados_dia = get_espn_fecha(fecha)
-        for mnum, t1, t2, gl, gv in r32_por_fecha[fecha]:
-            # Buscar resultado en extra_lkp (con fallback inverso)
-            if gl is None: gl, gv = _xlkp(t1, t2, None, None)
-            espn_info = estados_dia.get((t1, t2)) or (estados_dia.get((t2, t1)) if t2 else None)
-            lbl = f'<span style="color:#6c7086;font-size:.68rem;min-width:28px;display:inline-block">M{mnum}</span>'
-            st.markdown(lbl, unsafe_allow_html=True)
-            _render_match_row(t1, t2, fecha, gl=gl, gv=gv, espn_info=espn_info)
-
-    st.markdown("---")
+        for fecha in sorted(r32_por_fecha.keys()):
+            _date_header(fecha)
+            estados_dia = get_espn_fecha(fecha)
+            for mnum, t1, t2, gl, gv in r32_por_fecha[fecha]:
+                if gl is None: gl, gv = _xlkp(t1, t2, None, None)
+                espn_info = estados_dia.get((t1, t2)) or (estados_dia.get((t2, t1)) if t2 else None)
+                lbl = f'<span style="color:#6c7086;font-size:.68rem;min-width:28px;display:inline-block">M{mnum}</span>'
+                st.markdown(lbl, unsafe_allow_html=True)
+                _render_match_row(t1, t2, fecha, gl=gl, gv=gv, espn_info=espn_info)
 
     # ── 🔵 OCTAVOS DE FINAL — R16 ────────────────────────────────────
     with st.expander("🔵 Octavos de Final — 8 partidos  ·  4–7 jul", expanded=True):
