@@ -238,15 +238,15 @@ FIXTURE_R16 = {
 }
 # QF — cuartos de final
 FIXTURE_QF = {
-    97:  ("2026-07-09", None, None, None, None),
-    98:  ("2026-07-10", None, None, None, None),
-    99:  ("2026-07-11", None, None, None, None),
-    100: ("2026-07-11", None, None, None, None),
+    97:  ("2026-07-09", "Marruecos",  "Francia",    0, 2),
+    98:  ("2026-07-11", "Noruega",    "Inglaterra", 1, 2),
+    99:  ("2026-07-10", "España",     "Bélgica",    2, 1),
+    100: ("2026-07-11", "Argentina",  "Suiza",      3, 1),  # a.e.t.
 }
 # SF — semifinales
 FIXTURE_SF = {
-    101: ("2026-07-14", None, None, None, None),
-    102: ("2026-07-15", None, None, None, None),
+    101: ("2026-07-14", None, None, None, None),  # Francia vs España
+    102: ("2026-07-15", None, None, None, None),  # Argentina vs Inglaterra
 }
 # 3er puesto y Final
 FIXTURE_FINAL = {
@@ -259,7 +259,7 @@ FIXTURE_FINAL = {
 BRACKET_R16_LABELS = [(89,"M73","M75"),(90,"M74","M77"),(91,"M76","M78"),(92,"M79","M80"),
                       (93,"M83","M84"),(94,"M81","M82"),(95,"M86","M88"),(96,"M85","M87")]
 BRACKET_QF_LABELS  = [(97,"M89","M90"),(98,"M91","M92"),(99,"M93","M94"),(100,"M95","M96")]
-BRACKET_SF_LABELS  = [(101,"M97","M98"),(102,"M99","M100")]
+BRACKET_SF_LABELS  = [(101,"M97","M99"),(102,"M100","M98")]  # Francia/España y Argentina/Inglaterra
 BRACKET_3RD_LABEL  = [(103,"M101","M102")]  # 3er puesto
 BRACKET_F_LABEL    = [(104,"M101","M102")]  # Final
 
