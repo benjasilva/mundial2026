@@ -273,9 +273,10 @@ GANADORES_PENALES = {
 
 def get_winner(mnum):
     """Devuelve el equipo ganador de un partido KO.
-    Busca en: 1) GANADORES_PENALES, 2) fixture hardcodeado, 3) resultados_extra de ESPN."""
-    if mnum in GANADORES_PENALES:
-        return GANADORES_PENALES[mnum]
+    Prioridad: 1) football-data.org (incluye penales automáticos)
+               2) GANADORES_PENALES hardcodeado
+               3) fixture hardcodeado por goles
+               4) resultados_extra de ESPN"""
     if   mnum <= 88:  fixture = FIXTURE_R32
     elif mnum <= 96:  fixture = FIXTURE_R16
     elif mnum <= 100: fixture = FIXTURE_QF
@@ -284,24 +285,39 @@ def get_winner(mnum):
     if not entry: return None
     _, loc, vis, gl, gv = entry
     if None in (loc, vis): return None
-    # Resultado hardcodeado
+
+    # 1) football-data.org — ganador oficial incluyendo penales
+    try:
+        fdorg = fetch_fdorg_ko()
+        info = fdorg.get((loc, vis)) or fdorg.get((vis, loc))
+        if info and info[2]:
+            return info[2]
+    except Exception:
+        pass
+
+    # 2) override manual de penales
+    if mnum in GANADORES_PENALES:
+        return GANADORES_PENALES[mnum]
+
+    # 3) resultado hardcodeado por goles
     if None not in (gl, gv):
         if gl > gv: return loc
         if gv > gl: return vis
-        return None  # empate → necesita GANADORES_PENALES
-    # Fallback: buscar en resultados_extra (descargados de ESPN)
+        return None  # empate → penales no registrados
+
+    # 4) resultados_extra de ESPN
     try:
         for r in st.session_state.get('resultados_extra', []):
             rl, rv, rgl, rgv = r['local'], r['visita'], r['gl'], r['gv']
-            if (rl == loc and rv == vis):
+            if rl == loc and rv == vis:
                 if rgl > rgv: return loc
                 if rgv > rgl: return vis
-            elif (rl == vis and rv == loc):
+            elif rl == vis and rv == loc:
                 if rgl > rgv: return vis
                 if rgv > rgl: return loc
     except Exception:
         pass
-    return None  # aún sin resultado
+    return None
 
 # =====================================================================
 # BRACKET OFICIAL R32 — Copa Mundial 2026
@@ -1116,6 +1132,59 @@ ESPN_MAP = {
 
 ESPN_URL = "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard"
 
+# ── football-data.org — bracket KO automático ────────────────────────
+FDORG_URL  = "https://api.football-data.org/v4/competitions/WC/matches"
+FDORG_STAGES = {"LAST_32","LAST_16","QUARTER_FINALS","SEMI_FINALS","THIRD_PLACE","FINAL"}
+# Mapeo inglés→español para football-data.org (amplía ESPN_MAP)
+FDORG_MAP = {**ESPN_MAP, **{
+    "Morocco":"Marruecos","Canada":"Canadá","France":"France",
+    "Paraguay":"Paraguay","Brazil":"Brasil","Norway":"Noruega",
+    "Mexico":"México","England":"Inglaterra",
+    "Portugal":"Portugal","Spain":"España",
+    "United States":"Estados Unidos","Belgium":"Bélgica",
+    "Argentina":"Argentina","Egypt":"Egipto",
+    "Switzerland":"Suiza","Colombia":"Colombia",
+    "Germany":"Alemania","Netherlands":"Países Bajos",
+    "Japan":"Japón","Sweden":"Suecia",
+    "Ivory Coast":"Costa de Marfil","Ecuador":"Ecuador",
+    "DR Congo":"R. D. del Congo","Bosnia and Herzegovina":"Bosnia y Herzegovina",
+    "Senegal":"Senegal","Croatia":"Croacia","Austria":"Austria",
+    "Algeria":"Argelia","Cape Verde":"Cabo Verde","Ghana":"Ghana",
+    "Australia":"Australia","South Africa":"Sudáfrica",
+    "France":"Francia",
+}}
+
+@st.cache_data(ttl=300, show_spinner=False)
+def fetch_fdorg_ko():
+    """Devuelve {(local_es, visita_es): (gl, gv, ganador_es|None)} para toda la fase KO.
+    ganador_es tiene en cuenta penales (score.winner del API)."""
+    try:
+        key = st.secrets.get("FDORG_KEY","")
+        if not key: return {}
+        resp = requests.get(FDORG_URL, headers={"X-Auth-Token": key},
+                            params={"season": 2026}, timeout=10)
+        if resp.status_code != 200: return {}
+        resultados = {}
+        for m in resp.json().get("matches", []):
+            if m.get("stage") not in FDORG_STAGES: continue
+            if m.get("status") not in ("FINISHED","IN_PLAY"): continue
+            h_en = m.get("homeTeam",{}).get("name","")
+            a_en = m.get("awayTeam",{}).get("name","")
+            loc = FDORG_MAP.get(h_en) or espn_nombre(h_en)
+            vis = FDORG_MAP.get(a_en) or espn_nombre(a_en)
+            if not loc or not vis: continue
+            sc   = m.get("score",{})
+            ft   = sc.get("fullTime",{})
+            gl   = ft.get("home")
+            gv   = ft.get("away")
+            win_raw = sc.get("winner")  # HOME_TEAM / AWAY_TEAM / DRAW / None
+            ganador = (loc if win_raw=="HOME_TEAM" else
+                       vis if win_raw=="AWAY_TEAM" else None)
+            resultados[(loc, vis)] = (gl, gv, ganador)
+        return resultados
+    except Exception:
+        return {}
+
 def espn_nombre(nombre_espn):
     if nombre_espn in ESPN_MAP: return ESPN_MAP[nombre_espn]
     # Búsqueda tolerante sin tildes
@@ -1713,12 +1782,19 @@ with tab_fix:
 
     hoy_str = date.today().isoformat()
     extra_lkp = {(r['local'],r['visita']):(r['gl'],r['gv']) for r in st.session_state.resultados_extra}
-    # lookup helper con fallback inverso (ESPN a veces invierte local/visita)
+    _fdorg_ko = fetch_fdorg_ko()  # resultado KO desde football-data.org (cached 5min)
+    # lookup helper: football-data.org → extra_lkp → fixture hardcodeado
     def _xlkp(t1, t2, gl_m, gv_m):
+        # football-data.org primero (incluye resultados en tiempo real y penales)
+        fd = _fdorg_ko.get((t1,t2)) or _fdorg_ko.get((t2,t1))
+        if fd and fd[0] is not None:
+            if (t1,t2) in _fdorg_ko: return (fd[0], fd[1])
+            return (fd[1], fd[0])  # invertir si venía al revés
+        # ESPN extra_lkp con fallback inverso
         r = extra_lkp.get((t1,t2))
         if r is not None: return r
         ri = extra_lkp.get((t2,t1))
-        if ri is not None: return (ri[1], ri[0])  # invertir goles
+        if ri is not None: return (ri[1], ri[0])
         return (gl_m, gv_m)
 
     _espn_cache = {}
