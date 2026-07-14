@@ -271,7 +271,8 @@ GANADORES_PENALES = {
 }
 
 def get_winner(mnum):
-    """Devuelve el equipo ganador de un partido KO. Penales → GANADORES_PENALES."""
+    """Devuelve el equipo ganador de un partido KO.
+    Busca en: 1) GANADORES_PENALES, 2) fixture hardcodeado, 3) resultados_extra de ESPN."""
     if mnum in GANADORES_PENALES:
         return GANADORES_PENALES[mnum]
     if   mnum <= 88:  fixture = FIXTURE_R32
@@ -281,10 +282,25 @@ def get_winner(mnum):
     entry = fixture.get(mnum)
     if not entry: return None
     _, loc, vis, gl, gv = entry
-    if None in (loc, vis, gl, gv): return None
-    if gl > gv: return loc
-    if gv > gl: return vis
-    return None  # empate sin penal registrado → agregar a GANADORES_PENALES
+    if None in (loc, vis): return None
+    # Resultado hardcodeado
+    if None not in (gl, gv):
+        if gl > gv: return loc
+        if gv > gl: return vis
+        return None  # empate → necesita GANADORES_PENALES
+    # Fallback: buscar en resultados_extra (descargados de ESPN)
+    try:
+        for r in st.session_state.get('resultados_extra', []):
+            rl, rv, rgl, rgv = r['local'], r['visita'], r['gl'], r['gv']
+            if (rl == loc and rv == vis):
+                if rgl > rgv: return loc
+                if rgv > rgl: return vis
+            elif (rl == vis and rv == loc):
+                if rgl > rgv: return vis
+                if rgv > rgl: return loc
+    except Exception:
+        pass
+    return None  # aún sin resultado
 
 # =====================================================================
 # BRACKET OFICIAL R32 — Copa Mundial 2026
@@ -333,8 +349,8 @@ def init_state():
         st.session_state.resultados_extra = []
     if 'odds_api_key' not in st.session_state:
         st.session_state.odds_api_key = ""
-    if 'espn_fetched' not in st.session_state:
-        st.session_state.espn_fetched = False
+    if 'espn_fetch_ts' not in st.session_state:
+        st.session_state.espn_fetch_ts = 0.0
     if 'alineaciones' not in st.session_state:
         # {key: {'aus_local': [], 'aus_visita': []}}  key = "Local_vs_Visita"
         st.session_state.alineaciones = {}
@@ -1288,18 +1304,25 @@ def build_team_stats():
     st.session_state.team_stats_cache = promedios
     return promedios
 
-# Auto-fetch ESPN al iniciar (una sola vez por sesión)
-if not st.session_state.espn_fetched:
+# Auto-fetch ESPN cada 5 minutos (no solo una vez por sesión)
+import time as _time
+_FETCH_INTERVAL = 300  # segundos
+if _time.time() - st.session_state.espn_fetch_ts > _FETCH_INTERVAL:
+    _ya = {(r['local'], r['visita']) for r in st.session_state.resultados_extra}
     _nuevos = auto_fetch_espn()
     if _nuevos:
         _datos = st.session_state.datos
         for r in _nuevos:
             loc, vis, gl, gv = r['local'], r['visita'], r['gl'], r['gv']
+            if (loc, vis) in _ya: continue  # ya estaba
             if loc in _datos and vis in _datos:
                 _datos[loc]['g_favor']+=gl; _datos[loc]['g_contra']+=gv; _datos[loc]['PJ']+=1
                 _datos[vis]['g_favor']+=gv; _datos[vis]['g_contra']+=gl; _datos[vis]['PJ']+=1
+            # Guardar igual aunque el equipo no esté en datos (ej. partidos KO)
+            if (loc, vis) not in _ya:
                 st.session_state.resultados_extra.append(r)
-    st.session_state.espn_fetched = True
+                _ya.add((loc, vis))
+    st.session_state.espn_fetch_ts = _time.time()
 
 WIKI_URL = "https://es.wikipedia.org/wiki/Anexo:Calendario_de_la_Copa_Mundial_de_F%C3%BAtbol_de_2026"
 
@@ -1673,14 +1696,26 @@ with tab_fix:
         st.caption("Resultados en tiempo real · Predicciones para partidos por jugar · Hora Chile (UTC-4)")
     with col_h2:
         if st.button("🔄 Actualizar resultados", use_container_width=True):
-            st.session_state.espn_fetched = False
+            st.session_state.espn_fetch_ts = 0.0
             st.session_state.resultados_extra = []
             if 'datos' in st.session_state: del st.session_state['datos']
             if 'mc_result' in st.session_state: del st.session_state['mc_result']
             st.rerun()
+        _ts = st.session_state.get('espn_fetch_ts', 0)
+        if _ts:
+            from datetime import datetime, timezone, timedelta
+            _dt = datetime.fromtimestamp(_ts, tz=timezone(timedelta(hours=UTC_OFFSET)))
+            st.caption(f"Actualizado: {_dt.strftime('%H:%M')}")
 
     hoy_str = date.today().isoformat()
     extra_lkp = {(r['local'],r['visita']):(r['gl'],r['gv']) for r in st.session_state.resultados_extra}
+    # lookup helper con fallback inverso (ESPN a veces invierte local/visita)
+    def _xlkp(t1, t2, gl_m, gv_m):
+        r = extra_lkp.get((t1,t2))
+        if r is not None: return r
+        ri = extra_lkp.get((t2,t1))
+        if ri is not None: return (ri[1], ri[0])  # invertir goles
+        return (gl_m, gv_m)
 
     _espn_cache = {}
     def get_espn_fecha(f):
@@ -1753,8 +1788,8 @@ with tab_fix:
         _date_header(fecha)
         estados_dia = get_espn_fecha(fecha)
         for mnum, t1, t2, gl, gv in r32_por_fecha[fecha]:
-            # Buscar resultado en extra_lkp
-            if gl is None: gl, gv = extra_lkp.get((t1, t2), (None, None))
+            # Buscar resultado en extra_lkp (con fallback inverso)
+            if gl is None: gl, gv = _xlkp(t1, t2, None, None)
             espn_info = estados_dia.get((t1, t2)) or (estados_dia.get((t2, t1)) if t2 else None)
             lbl = f'<span style="color:#6c7086;font-size:.68rem;min-width:28px;display:inline-block">M{mnum}</span>'
             st.markdown(lbl, unsafe_allow_html=True)
@@ -1771,7 +1806,7 @@ with tab_fix:
             m1, m2 = int(lbl1[1:]), int(lbl2[1:])
             t1 = loc_m or get_winner(m1) or f"Gan. {lbl1}"
             t2 = vis_m or get_winner(m2) or f"Gan. {lbl2}"
-            gl_r, gv_r = extra_lkp.get((t1, t2), (gl_m, gv_m))
+            gl_r, gv_r = _xlkp(t1, t2, gl_m, gv_m)
             r16_por_fecha.setdefault(fecha_r16, []).append((mnum, t1, t2, gl_r, gv_r))
         for fecha in sorted(r16_por_fecha.keys()):
             _date_header(fecha)
@@ -1790,7 +1825,7 @@ with tab_fix:
             m1, m2 = int(lbl1[1:]), int(lbl2[1:])
             t1 = loc_m or get_winner(m1) or f"Gan. {lbl1}"
             t2 = vis_m or get_winner(m2) or f"Gan. {lbl2}"
-            gl_r, gv_r = extra_lkp.get((t1, t2), (gl_m, gv_m))
+            gl_r, gv_r = _xlkp(t1, t2, gl_m, gv_m)
             qf_por_fecha.setdefault(fecha_qf, []).append((mnum, t1, t2, gl_r, gv_r))
         for fecha in sorted(qf_por_fecha.keys()):
             _date_header(fecha)
@@ -1807,7 +1842,7 @@ with tab_fix:
             m1, m2 = int(lbl1[1:]), int(lbl2[1:])
             t1 = loc_m or get_winner(m1) or f"Gan. {lbl1}"
             t2 = vis_m or get_winner(m2) or f"Gan. {lbl2}"
-            gl_r, gv_r = extra_lkp.get((t1, t2), (gl_m, gv_m))
+            gl_r, gv_r = _xlkp(t1, t2, gl_m, gv_m)
             estados_dia = get_espn_fecha(fecha_sf)
             espn_info = estados_dia.get((t1,t2)) or estados_dia.get((t2,t1))
             _date_header(fecha_sf)
@@ -1821,7 +1856,7 @@ with tab_fix:
         m1, m2 = int(lbl1[1:]), int(lbl2[1:])
         t1 = loc_m or f"Per. {lbl1}"
         t2 = vis_m or f"Per. {lbl2}"
-        gl_r, gv_r = extra_lkp.get((t1, t2), (gl_m, gv_m))
+        gl_r, gv_r = _xlkp(t1, t2, gl_m, gv_m)
         estados_dia = get_espn_fecha(fecha_3)
         espn_info = estados_dia.get((t1,t2)) or estados_dia.get((t2,t1))
         _date_header(fecha_3)
@@ -1834,7 +1869,7 @@ with tab_fix:
         m1, m2 = int(lbl1[1:]), int(lbl2[1:])
         t1 = loc_m or get_winner(m1) or f"Gan. {lbl1}"
         t2 = vis_m or get_winner(m2) or f"Gan. {lbl2}"
-        gl_r, gv_r = extra_lkp.get((t1, t2), (gl_m, gv_m))
+        gl_r, gv_r = _xlkp(t1, t2, gl_m, gv_m)
         estados_dia = get_espn_fecha(fecha_f)
         espn_info = estados_dia.get((t1,t2)) or estados_dia.get((t2,t1))
         _date_header(fecha_f)
