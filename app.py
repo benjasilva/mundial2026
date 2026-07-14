@@ -227,14 +227,14 @@ FIXTURE_R32 = {
 # R16 — octavos de final
 # Equipos se resuelven automáticamente desde get_winner(); solo llenar cuando resultado esté disponible
 FIXTURE_R16 = {
-    89:  ("2026-07-04", "Canadá",    "Marruecos", 0,    3),
-    90:  ("2026-07-04", "Paraguay",  "Francia",   0,    1),
-    91:  ("2026-07-05", None, None, None, None),
-    92:  ("2026-07-05", None, None, None, None),
-    93:  ("2026-07-06", None, None, None, None),
-    94:  ("2026-07-06", None, None, None, None),
-    95:  ("2026-07-07", None, None, None, None),
-    96:  ("2026-07-07", None, None, None, None),
+    89:  ("2026-07-04", "Canadá",        "Marruecos",  0, 3),
+    90:  ("2026-07-04", "Paraguay",      "Francia",    0, 1),
+    91:  ("2026-07-05", "Brasil",        "Noruega",    1, 2),
+    92:  ("2026-07-05", "México",        "Inglaterra", 2, 3),
+    93:  ("2026-07-06", "Portugal",      "España",     0, 1),
+    94:  ("2026-07-06", "Estados Unidos","Bélgica",    1, 4),
+    95:  ("2026-07-07", "Argentina",     "Egipto",     3, 2),
+    96:  ("2026-07-07", "Suiza",         "Colombia",   0, 0),  # Suiza 4-3 pens
 }
 # QF — cuartos de final
 FIXTURE_QF = {
@@ -268,6 +268,7 @@ GANADORES_PENALES = {
     74: "Paraguay",   # Alemania 1-1 Paraguay, Paraguay 4-3 pens
     75: "Marruecos",  # Países Bajos 1-1 Marruecos, Marruecos 3-2 pens
     88: "Egipto",     # Australia 1-1 Egipto, Egipto 4-2 pens
+    96: "Suiza",      # Suiza 0-0 Colombia, Suiza 4-3 pens
 }
 
 def get_winner(mnum):
@@ -1310,19 +1311,22 @@ _FETCH_INTERVAL = 300  # segundos
 if _time.time() - st.session_state.espn_fetch_ts > _FETCH_INTERVAL:
     _ya = {(r['local'], r['visita']) for r in st.session_state.resultados_extra}
     _nuevos = auto_fetch_espn()
+    _hubo_nuevos = False
     if _nuevos:
         _datos = st.session_state.datos
         for r in _nuevos:
             loc, vis, gl, gv = r['local'], r['visita'], r['gl'], r['gv']
-            if (loc, vis) in _ya: continue  # ya estaba
+            if (loc, vis) in _ya: continue
             if loc in _datos and vis in _datos:
                 _datos[loc]['g_favor']+=gl; _datos[loc]['g_contra']+=gv; _datos[loc]['PJ']+=1
                 _datos[vis]['g_favor']+=gv; _datos[vis]['g_contra']+=gl; _datos[vis]['PJ']+=1
-            # Guardar igual aunque el equipo no esté en datos (ej. partidos KO)
             if (loc, vis) not in _ya:
                 st.session_state.resultados_extra.append(r)
                 _ya.add((loc, vis))
+                _hubo_nuevos = True
     st.session_state.espn_fetch_ts = _time.time()
+    if _hubo_nuevos:
+        st.rerun()  # refrescar pantalla con datos nuevos
 
 WIKI_URL = "https://es.wikipedia.org/wiki/Anexo:Calendario_de_la_Copa_Mundial_de_F%C3%BAtbol_de_2026"
 
