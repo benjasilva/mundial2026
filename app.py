@@ -1135,24 +1135,6 @@ ESPN_URL = "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scor
 # ── football-data.org — bracket KO automático ────────────────────────
 FDORG_URL  = "https://api.football-data.org/v4/competitions/WC/matches"
 FDORG_STAGES = {"LAST_32","LAST_16","QUARTER_FINALS","SEMI_FINALS","THIRD_PLACE","FINAL"}
-# Mapeo inglés→español para football-data.org (amplía ESPN_MAP)
-FDORG_MAP = {**ESPN_MAP, **{
-    "Morocco":"Marruecos","Canada":"Canadá","France":"France",
-    "Paraguay":"Paraguay","Brazil":"Brasil","Norway":"Noruega",
-    "Mexico":"México","England":"Inglaterra",
-    "Portugal":"Portugal","Spain":"España",
-    "United States":"Estados Unidos","Belgium":"Bélgica",
-    "Argentina":"Argentina","Egypt":"Egipto",
-    "Switzerland":"Suiza","Colombia":"Colombia",
-    "Germany":"Alemania","Netherlands":"Países Bajos",
-    "Japan":"Japón","Sweden":"Suecia",
-    "Ivory Coast":"Costa de Marfil","Ecuador":"Ecuador",
-    "DR Congo":"R. D. del Congo","Bosnia and Herzegovina":"Bosnia y Herzegovina",
-    "Senegal":"Senegal","Croatia":"Croacia","Austria":"Austria",
-    "Algeria":"Argelia","Cape Verde":"Cabo Verde","Ghana":"Ghana",
-    "Australia":"Australia","South Africa":"Sudáfrica",
-    "France":"Francia",
-}}
 
 @st.cache_data(ttl=300, show_spinner=False)
 def fetch_fdorg_ko():
@@ -1170,8 +1152,8 @@ def fetch_fdorg_ko():
             if m.get("status") not in ("FINISHED","IN_PLAY"): continue
             h_en = m.get("homeTeam",{}).get("name","")
             a_en = m.get("awayTeam",{}).get("name","")
-            loc = FDORG_MAP.get(h_en) or espn_nombre(h_en)
-            vis = FDORG_MAP.get(a_en) or espn_nombre(a_en)
+            loc = ESPN_MAP.get(h_en) or espn_nombre(h_en)
+            vis = ESPN_MAP.get(a_en) or espn_nombre(a_en)
             if not loc or not vis: continue
             sc   = m.get("score",{})
             ft   = sc.get("fullTime",{})
