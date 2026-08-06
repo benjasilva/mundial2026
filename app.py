@@ -245,13 +245,13 @@ FIXTURE_QF = {
 }
 # SF — semifinales
 FIXTURE_SF = {
-    101: ("2026-07-14", None, None, None, None),  # Francia vs España
-    102: ("2026-07-15", None, None, None, None),  # Argentina vs Inglaterra
+    101: ("2026-07-14", "Francia",   "España",      0, 2),
+    102: ("2026-07-15", "Argentina", "Inglaterra",  2, 1),
 }
 # 3er puesto y Final
 FIXTURE_FINAL = {
-    103: ("2026-07-18", None, None, None, None),  # 3er puesto
-    104: ("2026-07-19", None, None, None, None),  # Final
+    103: ("2026-07-18", "Francia",    "Inglaterra", 4, 6),
+    104: ("2026-07-19", "España",     "Argentina",  1, 0),
 }
 
 # Bracket de R16/QF/SF/Final — qué R32 feedan cada partido de R16
