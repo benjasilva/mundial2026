@@ -15,15 +15,19 @@ st.set_page_config(
 # LIGAS SOPORTADAS — nombre visible -> sport key de The Odds API
 # =====================================================================
 LIGAS = {
-    "España":      {"sport_key": "soccer_spain_la_liga",         "emoji": "🇪🇸"},
-    "Inglaterra":  {"sport_key": "soccer_epl",                   "emoji": "🏴"},
-    "Holanda":     {"sport_key": "soccer_netherlands_eredivisie","emoji": "🇳🇱"},
-    "Italia":      {"sport_key": "soccer_italy_serie_a",         "emoji": "🇮🇹"},
-    "Portugal":    {"sport_key": "soccer_portugal_primeira_liga","emoji": "🇵🇹"},
-    "Francia":     {"sport_key": "soccer_france_ligue_one",      "emoji": "🇫🇷"},
-    "Chile":       {"sport_key": "soccer_chile_campeonato",      "emoji": "🇨🇱"},
-    "Brasil":      {"sport_key": "soccer_brazil_campeonato",     "emoji": "🇧🇷"},
-    "Alemania":    {"sport_key": "soccer_germany_bundesliga",    "emoji": "🇩🇪"},
+    "España":             {"sport_key": "soccer_spain_la_liga",              "emoji": "🇪🇸"},
+    "Inglaterra":         {"sport_key": "soccer_epl",                        "emoji": "🏴"},
+    "Holanda":            {"sport_key": "soccer_netherlands_eredivisie",     "emoji": "🇳🇱"},
+    "Italia":             {"sport_key": "soccer_italy_serie_a",              "emoji": "🇮🇹"},
+    "Portugal":           {"sport_key": "soccer_portugal_primeira_liga",     "emoji": "🇵🇹"},
+    "Francia":            {"sport_key": "soccer_france_ligue_one",           "emoji": "🇫🇷"},
+    "Chile":              {"sport_key": "soccer_chile_campeonato",           "emoji": "🇨🇱"},
+    "Brasil":             {"sport_key": "soccer_brazil_campeonato",          "emoji": "🇧🇷"},
+    "Alemania":           {"sport_key": "soccer_germany_bundesliga",         "emoji": "🇩🇪"},
+    "Champions League":   {"sport_key": "soccer_uefa_champs_league",         "emoji": "🏆"},
+    "Europa League":      {"sport_key": "soccer_uefa_europa_league",         "emoji": "🇪🇺"},
+    "Copa Libertadores":  {"sport_key": "soccer_conmebol_copa_libertadores", "emoji": "🌎"},
+    "Copa Sudamericana":  {"sport_key": "soccer_conmebol_copa_sudamericana", "emoji": "🥈"},
 }
 
 # Equipos y ratings de referencia para el modo demo (sin API key).
@@ -38,6 +42,10 @@ DEMO_EQUIPOS = {
     "Chile":      ["Colo-Colo", "Universidad de Chile", "Universidad Católica", "Palestino", "Cobresal", "Huachipato"],
     "Brasil":     ["Flamengo", "Palmeiras", "São Paulo", "Corinthians", "Botafogo", "Atlético Mineiro"],
     "Alemania":   ["Bayern Múnich", "Bayer Leverkusen", "Borussia Dortmund", "RB Leipzig", "Stuttgart", "Eintracht Frankfurt"],
+    "Champions League":  ["Real Madrid", "Manchester City", "Bayern Múnich", "Paris Saint-Germain", "Inter de Milán", "Liverpool"],
+    "Europa League":     ["Tottenham", "Atalanta", "Bayer Leverkusen", "AS Roma", "Ajax", "Lazio"],
+    "Copa Libertadores": ["Flamengo", "River Plate", "Palmeiras", "Boca Juniors", "Colo-Colo", "Fluminense"],
+    "Copa Sudamericana": ["Independiente", "Universidad Católica", "Corinthians", "Racing Club", "LDU Quito", "Nacional"],
 }
 
 
@@ -137,7 +145,7 @@ def partidos_demo(nombre_liga):
 init_state()
 
 st.title("🎯 Ligas · Probabilidades y combinada")
-st.caption("España · Inglaterra · Holanda · Italia · Portugal · Francia · Chile · Brasil · Alemania")
+st.caption("España · Inglaterra · Holanda · Italia · Portugal · Francia · Chile · Brasil · Alemania · Champions League · Europa League · Copa Libertadores · Copa Sudamericana")
 
 with st.expander("⚙️ Configuración — The Odds API (opcional pero recomendado)"):
     st.markdown(
@@ -172,43 +180,10 @@ with st.spinner("Consultando partidos y cuotas..."):
 for a in avisos:
     st.info(a)
 
-# ── Tablas por liga ──────────────────────────────────────────────────
-tabs = st.tabs([f"{LIGAS[l]['emoji']} {l}" for l in ligas_sel])
-for tab, liga in zip(tabs, ligas_sel):
-    with tab:
-        partidos = datos_por_liga[liga]
-        if not partidos:
-            st.warning("No hay partidos disponibles para esta liga.")
-            continue
-        filas = []
-        for p in partidos:
-            filas.append({
-                "Partido": f"{p['local']} vs {p['visita']}",
-                "Fecha": p["fecha"],
-                "Local %": round(p["prob"]["L"] * 100, 1),
-                "Empate %": round(p["prob"]["E"] * 100, 1),
-                "Visita %": round(p["prob"]["V"] * 100, 1),
-                "Cuota L": p["cuota"]["L"],
-                "Cuota E": p["cuota"]["E"],
-                "Cuota V": p["cuota"]["V"],
-                "Fuente": p["fuente"],
-            })
-        df = pd.DataFrame(filas)
-        st.dataframe(
-            df.style
-                .background_gradient(subset=["Local %", "Empate %", "Visita %"], cmap="Blues")
-                .format({"Local %": "{:.1f}", "Empate %": "{:.1f}", "Visita %": "{:.1f}",
-                          "Cuota L": "{:.2f}", "Cuota E": "{:.2f}", "Cuota V": "{:.2f}"}),
-            use_container_width=True, hide_index=True,
-        )
-
 # =====================================================================
 # COMBINADA — top N picks por mayor probabilidad, un pick por partido
+# (se calcula antes del layout para poder mostrarla en la columna derecha)
 # =====================================================================
-st.markdown("---")
-st.markdown("## 🔮 Combinada sugerida")
-st.caption("Se elige, por cada partido, el resultado (Local/Empate/Visita) con mayor probabilidad, y se arma la combinada con los N picks más probables entre todas las ligas seleccionadas.")
-
 candidatos = []
 for liga, partidos in datos_por_liga.items():
     for p in partidos:
@@ -223,35 +198,88 @@ for liga, partidos in datos_por_liga.items():
             "Cuota": p["cuota"][mejor],
             "Fuente": p["fuente"],
         })
-
 candidatos.sort(key=lambda c: c["Probabilidad"], reverse=True)
 elegidos = candidatos[:n_combinada]
 
-if len(elegidos) < n_combinada:
-    st.warning(f"Solo hay {len(elegidos)} partidos disponibles entre las ligas elegidas.")
+col_izq, col_der = st.columns([2, 1], gap="large")
 
-if elegidos:
-    df_comb = pd.DataFrame(elegidos)
-    df_comb_view = df_comb.copy()
-    df_comb_view["Probabilidad"] = (df_comb_view["Probabilidad"] * 100).round(1).astype(str) + "%"
-    st.dataframe(df_comb_view, use_container_width=True, hide_index=True)
+# ── Columna izquierda: partidos y picks ─────────────────────────────
+with col_izq:
+    st.markdown("### 📋 Partidos y resultados")
+    tabs = st.tabs([f"{LIGAS[l]['emoji']} {l}" for l in ligas_sel])
+    for tab, liga in zip(tabs, ligas_sel):
+        with tab:
+            partidos = datos_por_liga[liga]
+            if not partidos:
+                st.warning("No hay partidos disponibles para esta liga.")
+                continue
+            filas = []
+            for p in partidos:
+                filas.append({
+                    "Partido": f"{p['local']} vs {p['visita']}",
+                    "Fecha": p["fecha"],
+                    "Local %": round(p["prob"]["L"] * 100, 1),
+                    "Empate %": round(p["prob"]["E"] * 100, 1),
+                    "Visita %": round(p["prob"]["V"] * 100, 1),
+                    "Cuota L": p["cuota"]["L"],
+                    "Cuota E": p["cuota"]["E"],
+                    "Cuota V": p["cuota"]["V"],
+                    "Fuente": p["fuente"],
+                })
+            df = pd.DataFrame(filas)
+            st.dataframe(
+                df.style
+                    .background_gradient(subset=["Local %", "Empate %", "Visita %"], cmap="Blues")
+                    .format({"Local %": "{:.1f}", "Empate %": "{:.1f}", "Visita %": "{:.1f}",
+                              "Cuota L": "{:.2f}", "Cuota E": "{:.2f}", "Cuota V": "{:.2f}"}),
+                use_container_width=True, hide_index=True,
+            )
 
-    prob_combinada = np.prod([c["Probabilidad"] for c in elegidos])
-    cuota_combinada = np.prod([c["Cuota"] for c in elegidos])
-    usa_demo = any(c["Fuente"] == "Demo" for c in elegidos)
+    st.markdown("#### 🔮 Picks de la combinada")
+    st.caption("Por cada partido se toma el resultado (Local/Empate/Visita) con mayor probabilidad; estos son los N más altos entre todas las ligas elegidas.")
+    if elegidos:
+        df_comb_view = pd.DataFrame(elegidos).copy()
+        df_comb_view["Probabilidad"] = (df_comb_view["Probabilidad"] * 100).round(1).astype(str) + "%"
+        st.dataframe(df_comb_view, use_container_width=True, hide_index=True)
+        if len(elegidos) < n_combinada:
+            st.warning(f"Solo hay {len(elegidos)} partidos disponibles entre las ligas elegidas.")
+    else:
+        st.warning("No hay partidos disponibles para armar una combinada.")
 
-    c1, c2, c3 = st.columns(3)
-    c1.metric("Probabilidad conjunta", f"{prob_combinada * 100:.1f}%")
-    c2.metric("Cuota combinada", f"{cuota_combinada:.2f}")
-    c3.metric("Retorno por $100", f"${cuota_combinada * 100:.0f}")
+# ── Columna derecha: probabilidad total + simulador de monto ───────
+with col_der:
+    st.markdown("### 📊 Probabilidad total")
+    if elegidos:
+        prob_combinada = np.prod([c["Probabilidad"] for c in elegidos])
+        cuota_combinada = np.prod([c["Cuota"] for c in elegidos])
+        usa_demo = any(c["Fuente"] == "Demo" for c in elegidos)
 
-    if usa_demo:
-        st.caption("⚠️ Incluye partidos en modo demo (cuotas simuladas, no reales).")
+        with st.container(border=True):
+            st.metric("Probabilidad conjunta", f"{prob_combinada * 100:.1f}%")
+            st.metric("Cuota combinada (referencial)", f"{cuota_combinada:.2f}")
+            if usa_demo:
+                st.caption("⚠️ Incluye partidos en modo demo (cuotas simuladas, no reales).")
 
-    st.caption(
-        "La probabilidad conjunta es el producto de probabilidades individuales — a más partidos en la combinada, "
-        "menor la probabilidad de acertarla completa aunque la cuota suba. Esta información es orientativa, no una "
-        "recomendación de apuesta. Jugá responsable."
-    )
-else:
-    st.warning("No hay partidos disponibles para armar una combinada.")
+        st.markdown("### 💰 ¿Cuánto te darían?")
+        with st.container(border=True):
+            monto = st.number_input("Monto a apostar ($)", min_value=500, step=500, value=5000)
+            retorno = monto * cuota_combinada
+            st.metric("Retorno si aciertas todo", f"${retorno:,.0f}")
+            st.metric("Ganancia neta", f"${retorno - monto:,.0f}")
+
+        with st.expander("ℹ️ Nota sobre Polla Gol y casas locales"):
+            st.markdown(
+                "La cuota combinada de arriba es un **promedio de casas internacionales** (The Odds API no cubre "
+                "casas chilenas). Sirve como referencia de cuánto pagaría una apuesta de cuota fija por ese monto, "
+                "pero **no representa el pago real de Polla Gol**: Polla Gol es un pozo (pari-mutuel) — el premio "
+                "por categoría (11 a 14 aciertos) depende de cuánta gente más acertó esa semana, no de una cuota "
+                "fija. Igual te sirven las **probabilidades por partido** (arriba) para elegir tus picks ahí."
+            )
+
+        st.caption(
+            "La probabilidad conjunta es el producto de probabilidades individuales — a más partidos en la "
+            "combinada, menor la chance de acertarla completa aunque la cuota suba. Información orientativa, "
+            "no una recomendación de apuesta. Jugá responsable."
+        )
+    else:
+        st.info("Elegí ligas con partidos disponibles para ver la probabilidad total.")
