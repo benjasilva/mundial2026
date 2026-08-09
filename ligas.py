@@ -195,7 +195,10 @@ for tab, liga in zip(tabs, ligas_sel):
             })
         df = pd.DataFrame(filas)
         st.dataframe(
-            df.style.background_gradient(subset=["Local %", "Empate %", "Visita %"], cmap="Blues"),
+            df.style
+                .background_gradient(subset=["Local %", "Empate %", "Visita %"], cmap="Blues")
+                .format({"Local %": "{:.1f}", "Empate %": "{:.1f}", "Visita %": "{:.1f}",
+                          "Cuota L": "{:.2f}", "Cuota E": "{:.2f}", "Cuota V": "{:.2f}"}),
             use_container_width=True, hide_index=True,
         )
 
