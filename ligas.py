@@ -160,7 +160,8 @@ with st.expander("⚙️ Configuración — The Odds API (opcional pero recomend
 api_key = st.session_state.odds_api_key.strip()
 
 ligas_sel = st.multiselect("Ligas a incluir", list(LIGAS.keys()), default=list(LIGAS.keys()))
-n_combinada = st.slider("Tamaño de la combinada (número de partidos)", min_value=2, max_value=8, value=4)
+n_combinada = st.slider("Tamaño de la combinada (número de partidos)", min_value=2, max_value=10, value=4,
+                         help="Xperto (Polla) arma sus jugadas combinadas con entre 3 y 10 eventos.")
 
 st.markdown("---")
 
@@ -267,13 +268,16 @@ with col_der:
             st.metric("Retorno si aciertas todo", f"${retorno:,.0f}")
             st.metric("Ganancia neta", f"${retorno - monto:,.0f}")
 
-        with st.expander("ℹ️ Nota sobre Polla Gol y casas locales"):
+        with st.expander("ℹ️ Nota sobre Xperto, Polla Gol y casas internacionales"):
             st.markdown(
-                "La cuota combinada de arriba es un **promedio de casas internacionales** (The Odds API no cubre "
-                "casas chilenas). Sirve como referencia de cuánto pagaría una apuesta de cuota fija por ese monto, "
-                "pero **no representa el pago real de Polla Gol**: Polla Gol es un pozo (pari-mutuel) — el premio "
-                "por categoría (11 a 14 aciertos) depende de cuánta gente más acertó esa semana, no de una cuota "
-                "fija. Igual te sirven las **probabilidades por partido** (arriba) para elegir tus picks ahí."
+                "**[Xperto](https://xperto.polla.cl)** (Polla Chilena) es cuota fija, igual que este simulador: "
+                "arma sus jugadas combinadas con 3 a 10 eventos, tal como el slider de arriba. Es la opción local "
+                "más alineada con esta herramienta — pero Xperto no publica una API de cuotas, así que los números "
+                "acá vienen de casas internacionales (The Odds API) o del modo demo: son **referenciales**, no las "
+                "cuotas exactas que fija Xperto para cada partido.\n\n"
+                "**Polla Gol**, en cambio, es un pozo (pari-mutuel): el premio por categoría (11 a 14 aciertos) "
+                "depende de cuánta gente más acertó esa semana, no de una cuota fija — ahí no aplica el cálculo de "
+                "cuota combinada, pero sí te sirven las **probabilidades por partido** (arriba) para elegir tus picks."
             )
 
         st.caption(
