@@ -179,7 +179,7 @@ with st.expander("⚙️ Configuración — The Odds API (opcional pero recomend
                         elif not d.get("active", True):
                             inactivas.append(nombre)
                     if inexistentes:
-                        st.error("Estas ligas tienen un sport_key inválido (no existe en la API) — avisame para corregirlo: " + ", ".join(inexistentes))
+                        st.error("Estas ligas tienen un sport_key inválido (no existe en la API) — avísame para corregirlo: " + ", ".join(inexistentes))
                     if inactivas:
                         st.info("Estas ligas/copas existen pero están fuera de temporada ahora mismo (van a mostrar demo hasta que arranque el torneo): " + ", ".join(inactivas))
                     if not inexistentes and not inactivas:
@@ -207,7 +207,7 @@ estrategia = st.radio(
 st.markdown("---")
 
 if not ligas_sel:
-    st.warning("Elegí al menos una liga.")
+    st.warning("Elige al menos una liga.")
     st.stop()
 
 datos_por_liga = {}
@@ -305,7 +305,7 @@ with col_izq:
                        f"Solo hay {len(elegidos)} partidos disponibles entre las ligas elegidas.")
     else:
         st.warning("No hay partidos disponibles para armar una combinada."
-                   + (" Probá con 'Más seguro' o sumá más ligas — 'Value bets' necesita partidos con edge positivo." if usar_value else ""))
+                   + (" Prueba con 'Más seguro' o suma más ligas — 'Value bets' necesita partidos con edge positivo." if usar_value else ""))
 
 # ── Columna derecha: probabilidad total + simulador de monto ───────
 with col_der:
@@ -343,10 +343,10 @@ with col_der:
         st.caption(
             "La probabilidad conjunta es el producto de probabilidades individuales — a más partidos en la "
             "combinada, menor la chance de acertarla completa aunque la cuota suba. Información orientativa, "
-            "no una recomendación de apuesta. Jugá responsable."
+            "no una recomendación de apuesta. Juega responsable."
         )
     else:
-        st.info("Elegí ligas con partidos disponibles para ver la probabilidad total.")
+        st.info("Elige ligas con partidos disponibles para ver la probabilidad total.")
 
 # =====================================================================
 # REINVERSIÓN PROGRESIVA — apostar en cadena, más seguro primero
@@ -354,15 +354,15 @@ with col_der:
 st.markdown("---")
 st.markdown("## 🔁 Reinversión progresiva")
 st.caption(
-    "En vez de jugar todo en una sola boleta, armá una cadena: apostás en el partido más seguro, y si ganás, "
-    "reinvertís (todo o una parte) en el siguiente. Podés cortar en cualquier paso y quedarte con lo ganado hasta ahí."
+    "En vez de jugar todo en una sola boleta, arma una cadena: apuestas en el partido más seguro, y si ganas, "
+    "reinviertes (todo o una parte) en el siguiente. Puedes cortar en cualquier paso y quedarte con lo ganado hasta ahí."
 )
 
 if elegidos:
     cadena = sorted(elegidos, key=lambda c: c["Probabilidad"], reverse=True)
     capital_inicial = monto
     pct_reinversion = st.slider(
-        "% del capital que reinvertís en cada paso", min_value=0, max_value=100, value=100, step=10,
+        "% del capital que reinviertes en cada paso", min_value=0, max_value=100, value=100, step=10,
         help="100% = todo el capital en juego pasa al siguiente paso (equivale matemáticamente a la combinada de "
              "una sola boleta). Menos que 100% baja el riesgo porque vas guardando ganancia en el camino, a costa "
              "de un capital final menor si aciertas todos los pasos.",
@@ -384,9 +384,9 @@ if elegidos:
             "Prob. del paso": f"{c['Probabilidad'] * 100:.1f}%",
             "Prob. de llegar hasta acá": f"{prob_acum * 100:.1f}%",
             "Apostado": f"${apostado:,.0f}",
-            "Si ganás, capital en juego": f"${en_juego:,.0f}",
+            "Si ganas, capital en juego": f"${en_juego:,.0f}",
             "Guardado (no arriesgado)": f"${guardado:,.0f}",
-            "Total si cortás acá": f"${en_juego + guardado:,.0f}",
+            "Total si cortas acá": f"${en_juego + guardado:,.0f}",
         })
 
     st.dataframe(pd.DataFrame(filas_cadena), use_container_width=True, hide_index=True)
