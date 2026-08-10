@@ -194,6 +194,15 @@ api_key = st.session_state.odds_api_key.strip()
 ligas_sel = st.multiselect("Ligas a incluir", list(LIGAS.keys()), default=list(LIGAS.keys()))
 n_combinada = st.slider("Tamaño de la combinada (número de partidos)", min_value=2, max_value=10, value=4,
                          help="Xperto (Polla) arma sus jugadas combinadas con entre 3 y 10 eventos.")
+estrategia = st.radio(
+    "Estrategia para elegir los picks",
+    ["Más seguro (mayor probabilidad)", "Value bets (mejor cuota vs. consenso)"],
+    horizontal=True,
+    help="'Más seguro' toma el resultado más probable de cada partido (cuota baja, alta chance de acertar). "
+         "'Value bets' busca partidos donde la mejor cuota disponible paga más de lo que indica el consenso del "
+         "mercado — necesita cuotas de varias casas para tener señal real. En modo demo el edge sale igual (constante) "
+         "para las 3 opciones de cada partido, así que no hay señal real de valor.",
+)
 
 st.markdown("---")
 
@@ -217,21 +226,31 @@ for a in avisos:
 # COMBINADA — top N picks por mayor probabilidad, un pick por partido
 # (se calcula antes del layout para poder mostrarla en la columna derecha)
 # =====================================================================
+usar_value = estrategia.startswith("Value")
+
 candidatos = []
 for liga, partidos in datos_por_liga.items():
     for p in partidos:
-        mejor = max(p["prob"], key=p["prob"].get)
-        etiqueta = {"L": f"Gana {p['local']}", "E": "Empate", "V": f"Gana {p['visita']}"}[mejor]
+        etiqueta = {"L": f"Gana {p['local']}", "E": "Empate", "V": f"Gana {p['visita']}"}
+        edges = {k: p["prob"][k] * p["cuota"][k] - 1 for k in ("L", "E", "V")}
+        if usar_value:
+            mejor = max(edges, key=edges.get)
+            if edges[mejor] <= 0:
+                continue  # sin valor positivo en ningún resultado de este partido
+        else:
+            mejor = max(p["prob"], key=p["prob"].get)
         candidatos.append({
             "Liga": liga,
             "Partido": f"{p['local']} vs {p['visita']}",
             "Fecha": p["fecha"],
-            "Pronóstico": etiqueta,
+            "Pronóstico": etiqueta[mejor],
             "Probabilidad": p["prob"][mejor],
             "Cuota": p["cuota"][mejor],
+            "Edge %": edges[mejor] * 100,
             "Fuente": p["fuente"],
         })
-candidatos.sort(key=lambda c: c["Probabilidad"], reverse=True)
+
+candidatos.sort(key=lambda c: c["Edge %"] if usar_value else c["Probabilidad"], reverse=True)
 elegidos = candidatos[:n_combinada]
 
 col_izq, col_der = st.columns([2, 1], gap="large")
@@ -269,15 +288,24 @@ with col_izq:
             )
 
     st.markdown("#### 🔮 Picks de la combinada")
-    st.caption("Por cada partido se toma el resultado (Local/Empate/Visita) con mayor probabilidad; estos son los N más altos entre todas las ligas elegidas.")
+    if usar_value:
+        st.caption("Por cada partido se toma el resultado con mejor edge (probabilidad × cuota − 1) entre los que tienen valor positivo; se descartan los partidos sin ninguna opción con edge > 0.")
+    else:
+        st.caption("Por cada partido se toma el resultado (Local/Empate/Visita) con mayor probabilidad; estos son los N más altos entre todas las ligas elegidas.")
     if elegidos:
         df_comb_view = pd.DataFrame(elegidos).copy()
         df_comb_view["Probabilidad"] = (df_comb_view["Probabilidad"] * 100).round(1).astype(str) + "%"
+        df_comb_view["Edge %"] = df_comb_view["Edge %"].round(1)
+        if not usar_value:
+            df_comb_view = df_comb_view.drop(columns=["Edge %"])
         st.dataframe(df_comb_view, use_container_width=True, hide_index=True)
         if len(elegidos) < n_combinada:
-            st.warning(f"Solo hay {len(elegidos)} partidos disponibles entre las ligas elegidas.")
+            st.warning(f"Solo hay {len(elegidos)} partidos con valor positivo disponibles entre las ligas elegidas."
+                       if usar_value else
+                       f"Solo hay {len(elegidos)} partidos disponibles entre las ligas elegidas.")
     else:
-        st.warning("No hay partidos disponibles para armar una combinada.")
+        st.warning("No hay partidos disponibles para armar una combinada."
+                   + (" Probá con 'Más seguro' o sumá más ligas — 'Value bets' necesita partidos con edge positivo." if usar_value else ""))
 
 # ── Columna derecha: probabilidad total + simulador de monto ───────
 with col_der:
@@ -319,3 +347,54 @@ with col_der:
         )
     else:
         st.info("Elegí ligas con partidos disponibles para ver la probabilidad total.")
+
+# =====================================================================
+# REINVERSIÓN PROGRESIVA — apostar en cadena, más seguro primero
+# =====================================================================
+st.markdown("---")
+st.markdown("## 🔁 Reinversión progresiva")
+st.caption(
+    "En vez de jugar todo en una sola boleta, armá una cadena: apostás en el partido más seguro, y si ganás, "
+    "reinvertís (todo o una parte) en el siguiente. Podés cortar en cualquier paso y quedarte con lo ganado hasta ahí."
+)
+
+if elegidos:
+    cadena = sorted(elegidos, key=lambda c: c["Probabilidad"], reverse=True)
+    capital_inicial = monto
+    pct_reinversion = st.slider(
+        "% del capital que reinvertís en cada paso", min_value=0, max_value=100, value=100, step=10,
+        help="100% = todo el capital en juego pasa al siguiente paso (equivale matemáticamente a la combinada de "
+             "una sola boleta). Menos que 100% baja el riesgo porque vas guardando ganancia en el camino, a costa "
+             "de un capital final menor si aciertas todos los pasos.",
+    )
+
+    filas_cadena = []
+    en_juego = capital_inicial
+    guardado = 0.0
+    prob_acum = 1.0
+    for i, c in enumerate(cadena, start=1):
+        prob_acum *= c["Probabilidad"]
+        apostado = en_juego * (pct_reinversion / 100)
+        guardado += en_juego - apostado
+        en_juego = apostado * c["Cuota"]
+        filas_cadena.append({
+            "Paso": i,
+            "Partido": c["Partido"],
+            "Pronóstico": c["Pronóstico"],
+            "Prob. del paso": f"{c['Probabilidad'] * 100:.1f}%",
+            "Prob. de llegar hasta acá": f"{prob_acum * 100:.1f}%",
+            "Apostado": f"${apostado:,.0f}",
+            "Si ganás, capital en juego": f"${en_juego:,.0f}",
+            "Guardado (no arriesgado)": f"${guardado:,.0f}",
+            "Total si cortás acá": f"${en_juego + guardado:,.0f}",
+        })
+
+    st.dataframe(pd.DataFrame(filas_cadena), use_container_width=True, hide_index=True)
+    st.caption(
+        f"Capital inicial ${capital_inicial:,.0f}. Con 100% de reinversión, el resultado final es matemáticamente "
+        f"igual a la combinada de una sola boleta con estos {len(cadena)} partidos. Bajar el % de reinversión te "
+        "deja ir asegurando plata en el camino en vez de arriesgarla toda de nuevo en cada paso — el costo es un "
+        "capital final menor si aciertas todos los pasos."
+    )
+else:
+    st.info("Elegí partidos para simular la cadena de reinversión.")
