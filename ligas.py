@@ -163,22 +163,27 @@ with st.expander("⚙️ Configuración — The Odds API (opcional pero recomend
             try:
                 resp = requests.get(
                     "https://api.the-odds-api.com/v4/sports/",
-                    params={"apiKey": st.session_state.odds_api_key.strip()},
+                    params={"apiKey": st.session_state.odds_api_key.strip(), "all": "true"},
                     timeout=8,
                 )
                 if resp.status_code == 200:
                     deportes = resp.json()
                     restantes = resp.headers.get("x-requests-remaining", "?")
-                    st.success(f"Conexión OK — {len(deportes)} deportes disponibles. Solicitudes restantes este mes: {restantes}")
-                    keys_validos = {d["key"] for d in deportes}
-                    faltantes = [nombre for nombre, info in LIGAS.items() if info["sport_key"] not in keys_validos]
-                    if faltantes:
-                        st.warning(
-                            "Estas ligas tienen un sport_key que la API no reconoce (van a caer a modo demo): "
-                            + ", ".join(faltantes)
-                        )
-                    else:
-                        st.success("Los sport_key de las 13 ligas/copas son válidos.")
+                    st.success(f"Conexión OK — {len(deportes)} deportes totales (activos e inactivos). Solicitudes restantes este mes: {restantes}")
+                    info_por_key = {d["key"]: d for d in deportes}
+                    inexistentes, inactivas = [], []
+                    for nombre, info in LIGAS.items():
+                        d = info_por_key.get(info["sport_key"])
+                        if d is None:
+                            inexistentes.append(nombre)
+                        elif not d.get("active", True):
+                            inactivas.append(nombre)
+                    if inexistentes:
+                        st.error("Estas ligas tienen un sport_key inválido (no existe en la API) — avisame para corregirlo: " + ", ".join(inexistentes))
+                    if inactivas:
+                        st.info("Estas ligas/copas existen pero están fuera de temporada ahora mismo (van a mostrar demo hasta que arranque el torneo): " + ", ".join(inactivas))
+                    if not inexistentes and not inactivas:
+                        st.success("Los sport_key de las 13 ligas/copas son válidos y están activos.")
                 else:
                     st.error(f"Error {resp.status_code}: {resp.text[:200]}")
             except Exception as e:
