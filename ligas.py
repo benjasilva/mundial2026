@@ -51,7 +51,21 @@ DEMO_EQUIPOS = {
 
 def init_state():
     if "odds_api_key" not in st.session_state:
-        st.session_state.odds_api_key = ""
+        try:
+            st.session_state.odds_api_key = st.secrets.get("ODDS_API_KEY", "")
+        except Exception:
+            st.session_state.odds_api_key = ""
+
+
+def fmt_pct(x):
+    """Formatea un porcentaje con más decimales cuando es muy chico para no mostrar '0.0%' engañoso."""
+    if x == 0:
+        return "0%"
+    if x < 0.1:
+        return f"{x:.3f}%"
+    if x < 1:
+        return f"{x:.2f}%"
+    return f"{x:.1f}%"
 
 
 # =====================================================================
@@ -133,7 +147,7 @@ def partidos_demo(nombre_liga):
         margen = 1.06
         cuota = {k: round(margen / v, 2) for k, v in probs.items()}
         partidos.append({
-            "local": local, "visita": visita, "fecha": "próxima jornada",
+            "local": local, "visita": visita, "fecha": "(demo, sin fecha real)",
             "prob": probs, "cuota": cuota, "n_casas": 0, "fuente": "Demo",
         })
     return partidos
@@ -209,6 +223,14 @@ st.markdown("---")
 if not ligas_sel:
     st.warning("Elige al menos una liga.")
     st.stop()
+
+if not api_key:
+    st.warning(
+        "⚠️ **No hay API key configurada — estás viendo partidos de DEMOSTRACIÓN.** Son equipos de ejemplo "
+        "emparejados en orden fijo, no el fixture real de esta semana (el texto 'próxima jornada' es un marcador "
+        "genérico, no una fecha real). Configura tu API key en '⚙️ Configuración' arriba para ver los partidos y "
+        "cuotas reales."
+    )
 
 datos_por_liga = {}
 avisos = []
@@ -316,7 +338,7 @@ with col_der:
         usa_demo = any(c["Fuente"] == "Demo" for c in elegidos)
 
         with st.container(border=True):
-            st.metric("Probabilidad conjunta", f"{prob_combinada * 100:.1f}%")
+            st.metric("Probabilidad conjunta", fmt_pct(prob_combinada * 100))
             st.metric("Cuota combinada (referencial)", f"{cuota_combinada:.2f}")
             if usa_demo:
                 st.caption("⚠️ Incluye partidos en modo demo (cuotas simuladas, no reales).")
@@ -381,8 +403,8 @@ if elegidos:
             "Paso": i,
             "Partido": c["Partido"],
             "Pronóstico": c["Pronóstico"],
-            "Prob. del paso": f"{c['Probabilidad'] * 100:.1f}%",
-            "Prob. de llegar hasta acá": f"{prob_acum * 100:.1f}%",
+            "Prob. del paso": fmt_pct(c['Probabilidad'] * 100),
+            "Prob. de llegar hasta acá": fmt_pct(prob_acum * 100),
             "Apostado": f"${apostado:,.0f}",
             "Si ganas, capital en juego": f"${en_juego:,.0f}",
             "Guardado (no arriesgado)": f"${guardado:,.0f}",
