@@ -157,6 +157,33 @@ with st.expander("⚙️ Configuración — The Odds API (opcional pero recomend
         st.session_state.odds_api_key = key_input
         st.cache_data.clear()
 
+    if st.session_state.odds_api_key:
+        st.success("✅ API key configurada.")
+        if st.button("🔍 Probar conexión y validar ligas"):
+            try:
+                resp = requests.get(
+                    "https://api.the-odds-api.com/v4/sports/",
+                    params={"apiKey": st.session_state.odds_api_key.strip()},
+                    timeout=8,
+                )
+                if resp.status_code == 200:
+                    deportes = resp.json()
+                    restantes = resp.headers.get("x-requests-remaining", "?")
+                    st.success(f"Conexión OK — {len(deportes)} deportes disponibles. Solicitudes restantes este mes: {restantes}")
+                    keys_validos = {d["key"] for d in deportes}
+                    faltantes = [nombre for nombre, info in LIGAS.items() if info["sport_key"] not in keys_validos]
+                    if faltantes:
+                        st.warning(
+                            "Estas ligas tienen un sport_key que la API no reconoce (van a caer a modo demo): "
+                            + ", ".join(faltantes)
+                        )
+                    else:
+                        st.success("Los sport_key de las 13 ligas/copas son válidos.")
+                else:
+                    st.error(f"Error {resp.status_code}: {resp.text[:200]}")
+            except Exception as e:
+                st.error(f"No se pudo conectar: {e}")
+
 api_key = st.session_state.odds_api_key.strip()
 
 ligas_sel = st.multiselect("Ligas a incluir", list(LIGAS.keys()), default=list(LIGAS.keys()))
