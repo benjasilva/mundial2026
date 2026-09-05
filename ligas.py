@@ -236,7 +236,7 @@ init_state()
 
 st.markdown("### ⚽ Combinada")
 
-with st.expander("⚙️ Configuración — The Odds API (opcional pero recomendado)"):
+with st.expander("⚙️ Configuración — The Odds API (opcional pero recomendado)", key="expander_config"):
     st.markdown(
         "Cuotas reales vía **[the-odds-api.com](https://the-odds-api.com)** (plan gratis: 500 solicitudes/mes). "
         "Sin API key la app muestra partidos de **demostración** con cuotas simuladas, claramente marcados."
@@ -280,7 +280,7 @@ with st.expander("⚙️ Configuración — The Odds API (opcional pero recomend
 
 api_key = st.session_state.odds_api_key.strip()
 
-with st.expander(f"🏆 Ligas ({len(LIGAS)} disponibles)", expanded=False):
+with st.expander(f"🏆 Ligas ({len(LIGAS)} disponibles)", expanded=False, key="expander_ligas"):
     ligas_sel = st.multiselect("Ligas", list(LIGAS.keys()), default=list(LIGAS.keys()), label_visibility="collapsed")
 
 estrategia = st.radio(
@@ -420,7 +420,7 @@ else:
 # (colapsado por defecto: es una vista alternativa/avanzada, no la respuesta principal)
 # =====================================================================
 st.markdown("---")
-with st.expander("🔁 Reinversión progresiva (apostar en cadena)", expanded=False):
+with st.expander("🔁 Reinversión progresiva (apostar en cadena)", expanded=False, key="expander_reinversion"):
     st.caption("Si ganas, reinviertes en el siguiente paso — puedes cortar en cualquier paso y quedarte con lo ganado.")
 
     if elegidos:
@@ -466,7 +466,7 @@ def _grupo_fecha(c):
         return "Sin fecha (demo)"
     return f"{DIAS[dt.weekday()]} {dt.day:02d}/{dt.month:02d}"
 
-with st.expander(f"📋 Todos los partidos ({len(todos_partidos)})", expanded=False):
+with st.expander(f"📋 Todos los partidos ({len(todos_partidos)})", expanded=False, key="expander_partidos"):
     st.caption("Pre-marcados = sugeridos por la estrategia elegida. Marca o desmarca los que quieras.")
     grupos = {}
     for c in todos_partidos:
