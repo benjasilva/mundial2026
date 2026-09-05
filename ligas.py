@@ -34,12 +34,36 @@ st.markdown("""
 .pick-row .pr-main { font-size: 0.85rem; line-height: 1.35; }
 .pick-row .pr-main .pr-sub { opacity: 0.7; }
 .pick-row .pr-stats { font-size: 0.8rem; line-height: 1.35; opacity: 0.9; text-align: right; white-space: nowrap; }
+.stat-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin: 0.3rem 0;
+}
+.stat-chip {
+    flex: 1 1 0;
+    min-width: 5.5rem;
+    text-align: center;
+    padding: 0.35rem 0.4rem;
+    border-radius: 8px;
+    background-color: rgba(34, 139, 230, 0.12);
+}
+.stat-chip .stat-label { font-size: 0.68rem; opacity: 0.75; }
+.stat-chip .stat-value { font-size: 1.15rem; font-weight: 700; color: #1c7ed6; }
 </style>
 """, unsafe_allow_html=True)
 
 
 def _pick_row_html(main_html, stats_html):
     return f'<div class="pick-row"><div class="pr-main">{main_html}</div><div class="pr-stats">{stats_html}</div></div>'
+
+
+def _stat_chip(label, value):
+    return f'<div class="stat-chip"><div class="stat-label">{label}</div><div class="stat-value">{value}</div></div>'
+
+
+def _stat_grid(*chips):
+    return f'<div class="stat-grid">{"".join(chips)}</div>'
 
 # =====================================================================
 # LIGAS SOPORTADAS — nombre visible -> sport key de The Odds API
@@ -403,14 +427,16 @@ if elegidos:
     usa_demo = any(c["Fuente"] == "Demo" for c in elegidos)
 
     with st.container(border=True):
-        m1, m2 = st.columns(2)
-        m1.metric("Probabilidad", fmt_pct(prob_combinada * 100))
-        m2.metric("Cuota", f"{cuota_combinada:.2f}")
+        st.markdown(_stat_grid(
+            _stat_chip("Probabilidad", fmt_pct(prob_combinada * 100)),
+            _stat_chip("Cuota", f"{cuota_combinada:.2f}"),
+        ), unsafe_allow_html=True)
         monto = st.number_input("Monto ($)", min_value=500, step=500, value=5000)
         retorno = monto * cuota_combinada
-        r1, r2 = st.columns(2)
-        r1.metric("Retorno", f"${retorno:,.0f}")
-        r2.metric("Ganancia", f"${retorno - monto:,.0f}")
+        st.markdown(_stat_grid(
+            _stat_chip("Retorno", f"${retorno:,.0f}"),
+            _stat_chip("Ganancia", f"${retorno - monto:,.0f}"),
+        ), unsafe_allow_html=True)
         if usa_demo:
             st.caption("⚠️ Modo demo — cuotas simuladas.")
 
