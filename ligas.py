@@ -65,6 +65,25 @@ def _stat_chip(label, value):
 def _stat_grid(*chips):
     return f'<div class="stat-grid">{"".join(chips)}</div>'
 
+
+def mejor_casa_combinada(elegidos):
+    """Devuelve (casa, cuota_combinada) de la casa que cubre TODOS los partidos elegidos
+    con la mejor cuota combinada, o None si ninguna casa cubre todos."""
+    sets_casas = [set(c["Casas"].keys()) for c in elegidos]
+    if not sets_casas or not all(sets_casas):
+        return None
+    comunes = set.intersection(*sets_casas)
+    if not comunes:
+        return None
+    mejor_book, mejor_cuota = None, 0.0
+    for book in comunes:
+        cuota_book = 1.0
+        for c in elegidos:
+            cuota_book *= c["Casas"][book][c["K"]]
+        if cuota_book > mejor_cuota:
+            mejor_book, mejor_cuota = book, cuota_book
+    return mejor_book, mejor_cuota
+
 # =====================================================================
 # LIGAS SOPORTADAS — nombre visible -> sport key de The Odds API
 # =====================================================================
@@ -146,7 +165,9 @@ def _devig(avg_home, avg_draw, avg_away):
 def _parse_evento(ev):
     home, away = ev.get("home_team"), ev.get("away_team")
     cuotas = {"L": [], "E": [], "V": []}
+    casas = {}
     for book in ev.get("bookmakers", []):
+        nombre_casa = book.get("title", "?")
         for mkt in book.get("markets", []):
             if mkt["key"] != "h2h":
                 continue
@@ -156,6 +177,7 @@ def _parse_evento(ev):
                 cuotas["L"].append(ch)
                 cuotas["E"].append(cd)
                 cuotas["V"].append(ca)
+                casas[nombre_casa] = {"L": ch, "E": cd, "V": ca}
     if not cuotas["L"]:
         return None
     avg = {k: sum(v) / len(v) for k, v in cuotas.items()}
@@ -169,7 +191,7 @@ def _parse_evento(ev):
         fecha_dt = None
     return {
         "local": home, "visita": away, "fecha": fecha, "fecha_dt": fecha_dt,
-        "prob": probs, "cuota": best, "n_casas": len(cuotas["L"]), "fuente": "API",
+        "prob": probs, "cuota": best, "casas": casas, "n_casas": len(cuotas["L"]), "fuente": "API",
     }
 
 
@@ -207,7 +229,7 @@ def partidos_demo(nombre_liga):
         cuota = {k: round(margen / v, 2) for k, v in probs.items()}
         partidos.append({
             "local": local, "visita": visita, "fecha": "(demo, sin fecha real)", "fecha_dt": None,
-            "prob": probs, "cuota": cuota, "n_casas": 0, "fuente": "Demo",
+            "prob": probs, "cuota": cuota, "casas": {}, "n_casas": 0, "fuente": "Demo",
         })
     return partidos
 
@@ -355,6 +377,8 @@ for liga, partidos in datos_por_liga.items():
             "Cuota": p["cuota"][mejor_k],
             "Edge %": edge * 100,
             "Fuente": p["fuente"],
+            "K": mejor_k,
+            "Casas": p["casas"],
         })
 todos_partidos.sort(key=lambda c: c["Probabilidad"], reverse=True)
 
@@ -397,6 +421,33 @@ if elegidos:
         ), unsafe_allow_html=True)
         if usa_demo:
             st.caption("⚠️ Modo demo — cuotas simuladas.")
+
+    with st.container(border=True):
+        st.markdown("##### 🏦 Dónde apostarla")
+        if usa_demo:
+            st.caption("No disponible en modo demo — necesita cuotas reales de casas (configura tu API key).")
+        else:
+            resultado_casa = mejor_casa_combinada(elegidos)
+            if resultado_casa:
+                casa, cuota_casa = resultado_casa
+                st.markdown(_stat_grid(
+                    _stat_chip("Mejor casa", casa),
+                    _stat_chip("Cuota ahí", f"{cuota_casa:.2f}"),
+                ), unsafe_allow_html=True)
+                st.caption(f"Es la casa con mejor cuota combinada de las que cubren los {len(elegidos)} partidos elegidos.")
+            else:
+                st.caption("Ninguna casa cubre todos los partidos elegidos — mejor cuota por partido:")
+                for c in elegidos:
+                    if not c["Casas"]:
+                        continue
+                    mejor_book = max(c["Casas"], key=lambda b: c["Casas"][b][c["K"]])
+                    st.markdown(_pick_row_html(
+                        c["Partido"], f"{mejor_book}<br>{c['Casas'][mejor_book][c['K']]:.2f}",
+                    ), unsafe_allow_html=True)
+            st.caption(
+                "Casas internacionales según The Odds API — no licenciadas en Chile (para Chile, revisa "
+                "Xperto más abajo). Verifica que la casa sea confiable antes de usarla. Juega responsable."
+            )
 
     for c in elegidos:
         st.markdown(_pick_row_html(
