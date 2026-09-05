@@ -11,6 +11,19 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
+# El borde por defecto de st.container(border=True) tiene muy poco contraste
+# en tema oscuro — se refuerza con fondo y borde propios, válidos en ambos temas.
+st.markdown("""
+<style>
+[data-testid="stVerticalBlockBorderWrapper"] {
+    border: 1px solid rgba(150, 150, 150, 0.45) !important;
+    border-radius: 12px;
+    padding: 0.5rem 1rem 1rem 1rem;
+    background-color: rgba(150, 150, 150, 0.08);
+}
+</style>
+""", unsafe_allow_html=True)
+
 # =====================================================================
 # LIGAS SOPORTADAS — nombre visible -> sport key de The Odds API
 # =====================================================================
@@ -359,12 +372,14 @@ if elegidos:
     usa_demo = any(c["Fuente"] == "Demo" for c in elegidos)
 
     with st.container(border=True):
+        st.markdown("##### 📊 Probabilidad total")
         m1, m2 = st.columns(2)
         m1.metric("Probabilidad conjunta", fmt_pct(prob_combinada * 100))
         m2.metric("Cuota combinada (referencial)", f"{cuota_combinada:.2f}")
         if usa_demo:
             st.caption("⚠️ Incluye partidos en modo demo (cuotas simuladas, no reales).")
 
+    with st.container(border=True):
         st.markdown("##### 💰 ¿Cuánto te darían?")
         monto = st.number_input("Monto a apostar ($)", min_value=500, step=500, value=5000)
         retorno = monto * cuota_combinada
