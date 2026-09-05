@@ -228,17 +228,20 @@ with st.expander("⚙️ Configuración — The Odds API (opcional pero recomend
 api_key = st.session_state.odds_api_key.strip()
 
 ligas_sel = st.multiselect("Ligas a incluir", list(LIGAS.keys()), default=list(LIGAS.keys()))
-n_combinada = st.slider("Tamaño de la combinada (número de partidos)", min_value=2, max_value=10, value=4,
-                         help="Xperto (Polla) arma sus jugadas combinadas con entre 3 y 10 eventos.")
 estrategia = st.radio(
     "Estrategia para elegir los picks",
-    ["Más seguro (mayor probabilidad)", "Value bets (mejor cuota vs. consenso)"],
+    ["Más seguro (mayor probabilidad)", "Value bets (mejor cuota vs. consenso)", "Manual (elijo yo)"],
     horizontal=True,
     help="'Más seguro' toma el resultado más probable de cada partido (cuota baja, alta chance de acertar). "
          "'Value bets' busca partidos donde la mejor cuota disponible paga más de lo que indica el consenso del "
          "mercado — necesita cuotas de varias casas para tener señal real. En modo demo el edge sale igual (constante) "
-         "para las 3 opciones de cada partido, así que no hay señal real de valor.",
+         "para las 3 opciones de cada partido, así que no hay señal real de valor. "
+         "'Manual' te deja elegir vos mismo qué resultado de qué partido incluir.",
 )
+usar_manual = estrategia.startswith("Manual")
+if not usar_manual:
+    n_combinada = st.slider("Tamaño de la combinada (número de partidos)", min_value=2, max_value=10, value=4,
+                             help="Xperto (Polla) arma sus jugadas combinadas con entre 3 y 10 eventos.")
 filtro_fecha = st.radio(
     "Filtrar partidos por fecha",
     ["Todos", "Fin de semana (vie-lun)", "Entre semana (mar-jue)"],
@@ -279,35 +282,47 @@ if filtro_fecha != "Todos":
     datos_por_liga = {liga: filtra_por_fecha(partidos, filtro_fecha) for liga, partidos in datos_por_liga.items()}
 
 # =====================================================================
-# COMBINADA — top N picks por mayor probabilidad, un pick por partido
+# OPCIONES — cada partido expandido en sus 3 resultados posibles
 # (se calcula antes del layout para poder mostrarla en la columna derecha)
 # =====================================================================
 usar_value = estrategia.startswith("Value")
 
-candidatos = []
+todas_opciones = []
 for liga, partidos in datos_por_liga.items():
     for p in partidos:
         etiqueta = {"L": f"Gana {p['local']}", "E": "Empate", "V": f"Gana {p['visita']}"}
         edges = {k: p["prob"][k] * p["cuota"][k] - 1 for k in ("L", "E", "V")}
-        if usar_value:
-            mejor = max(edges, key=edges.get)
-            if edges[mejor] <= 0:
-                continue  # sin valor positivo en ningún resultado de este partido
-        else:
-            mejor = max(p["prob"], key=p["prob"].get)
-        candidatos.append({
-            "Liga": liga,
-            "Partido": f"{p['local']} vs {p['visita']}",
-            "Fecha": p["fecha"],
-            "Pronóstico": etiqueta[mejor],
-            "Probabilidad": p["prob"][mejor],
-            "Cuota": p["cuota"][mejor],
-            "Edge %": edges[mejor] * 100,
-            "Fuente": p["fuente"],
-        })
+        for k in ("L", "E", "V"):
+            todas_opciones.append({
+                "Liga": liga,
+                "Partido": f"{p['local']} vs {p['visita']}",
+                "Fecha": p["fecha"],
+                "Pronóstico": etiqueta[k],
+                "Probabilidad": p["prob"][k],
+                "Cuota": p["cuota"][k],
+                "Edge %": edges[k] * 100,
+                "Fuente": p["fuente"],
+            })
+todas_opciones.sort(key=lambda c: c["Probabilidad"], reverse=True)
 
-candidatos.sort(key=lambda c: c["Edge %"] if usar_value else c["Probabilidad"], reverse=True)
-elegidos = candidatos[:n_combinada]
+# candidatos = el mejor resultado (L/E/V) de cada partido — se usa para el
+# pick individual destacado y para las estrategias automáticas.
+candidatos = []
+vistos = set()
+for c in sorted(todas_opciones, key=lambda c: c["Edge %"] if usar_value else c["Probabilidad"], reverse=True):
+    if c["Partido"] in vistos:
+        continue
+    if usar_value and c["Edge %"] <= 0:
+        continue
+    vistos.add(c["Partido"])
+    candidatos.append(c)
+
+if usar_manual:
+    def _label(c):
+        return f"{fmt_pct(c['Probabilidad'] * 100)} · {c['Liga']} · {c['Partido']} · {c['Pronóstico']} · cuota {c['Cuota']:.2f}"
+    opcion_por_label = {_label(c): c for c in todas_opciones}
+else:
+    elegidos = candidatos[:n_combinada]
 
 # =====================================================================
 # RESUMEN — la mejor opción, arriba de todo (sin tener que scrollear
@@ -315,12 +330,29 @@ elegidos = candidatos[:n_combinada]
 # =====================================================================
 st.markdown("## 🎯 Resumen — mejor opción ahora")
 
-if elegidos:
-    mejor = candidatos[0]
-    st.info(
-        f"🥇 **Pick individual más {'valioso' if usar_value else 'seguro'} de hoy:** {mejor['Pronóstico']} "
-        f"— *{mejor['Partido']}* ({mejor['Liga']}) · {fmt_pct(mejor['Probabilidad'] * 100)} · cuota {mejor['Cuota']:.2f}"
+if usar_manual:
+    if candidatos:
+        mejor_ref = candidatos[0]
+        st.info(
+            f"🥇 **Pick individual más seguro de hoy (referencia):** {mejor_ref['Pronóstico']} "
+            f"— *{mejor_ref['Partido']}* ({mejor_ref['Liga']}) · {fmt_pct(mejor_ref['Probabilidad'] * 100)} · cuota {mejor_ref['Cuota']:.2f}"
+        )
+    labels_sel = st.multiselect(
+        "Elige los resultados para tu combinada",
+        options=list(opcion_por_label.keys()),
+        default=[],
+        help="Cada opción es un resultado (Local/Empate/Visita) de un partido. Ordenadas de mayor a menor "
+             "probabilidad. Podés escribir para buscar por equipo o liga.",
     )
+    elegidos = [opcion_por_label[l] for l in labels_sel]
+
+if elegidos:
+    if not usar_manual:
+        mejor = candidatos[0]
+        st.info(
+            f"🥇 **Pick individual más {'valioso' if usar_value else 'seguro'} de hoy:** {mejor['Pronóstico']} "
+            f"— *{mejor['Partido']}* ({mejor['Liga']}) · {fmt_pct(mejor['Probabilidad'] * 100)} · cuota {mejor['Cuota']:.2f}"
+        )
 
     prob_combinada = np.prod([c["Probabilidad"] for c in elegidos])
     cuota_combinada = np.prod([c["Cuota"] for c in elegidos])
@@ -341,7 +373,9 @@ if elegidos:
         r2.metric("Ganancia neta", f"${retorno - monto:,.0f}")
 
     st.markdown("#### 🔮 Picks de la combinada")
-    if usar_value:
+    if usar_manual:
+        st.caption("Los que elegiste vos arriba.")
+    elif usar_value:
         st.caption("Por cada partido se toma el resultado con mejor edge (probabilidad × cuota − 1) entre los que tienen valor positivo; se descartan los partidos sin ninguna opción con edge > 0.")
     else:
         st.caption("Por cada partido se toma el resultado (Local/Empate/Visita) con mayor probabilidad; estos son los N más altos entre todas las ligas elegidas.")
@@ -351,7 +385,7 @@ if elegidos:
     if not usar_value:
         df_comb_view = df_comb_view.drop(columns=["Edge %"])
     st.dataframe(df_comb_view, use_container_width=True, hide_index=True)
-    if len(elegidos) < n_combinada:
+    if not usar_manual and len(elegidos) < n_combinada:
         st.warning(f"Solo hay {len(elegidos)} partidos con valor positivo disponibles entre las ligas elegidas."
                    if usar_value else
                    f"Solo hay {len(elegidos)} partidos disponibles entre las ligas elegidas.")
@@ -373,6 +407,8 @@ if elegidos:
         "combinada, menor la chance de acertarla completa aunque la cuota suba. Información orientativa, "
         "no una recomendación de apuesta. Juega responsable."
     )
+elif usar_manual:
+    st.info("Todavía no elegiste ningún resultado — seleccioná arriba los partidos que quieras incluir.")
 else:
     st.warning("No hay partidos disponibles para armar una combinada."
                + (" Prueba con 'Más seguro' o suma más ligas — 'Value bets' necesita partidos con edge positivo." if usar_value else ""))
