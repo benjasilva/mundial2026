@@ -5,7 +5,7 @@ from datetime import datetime
 
 st.set_page_config(
     page_title="Ligas · Combinada",
-    page_icon="🎯",
+    page_icon="⚽",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
@@ -234,8 +234,7 @@ def filtra_por_fecha(partidos, filtro):
 # =====================================================================
 init_state()
 
-st.title("🎯 Ligas · Probabilidades y combinada")
-st.caption("España · Inglaterra · Holanda · Italia · Portugal · Francia · Chile · Brasil · Alemania · Champions League · Europa League · Copa Libertadores · Copa Sudamericana")
+st.markdown("### ⚽ Combinada")
 
 with st.expander("⚙️ Configuración — The Odds API (opcional pero recomendado)"):
     st.markdown(
@@ -384,7 +383,7 @@ else:
 # RESUMEN — la mejor opción, arriba de todo (sin tener que scrollear
 # los partidos por liga para llegar a esto, sobre todo en el celular)
 # =====================================================================
-st.markdown("## 🎯 Resumen")
+st.markdown("## ⚽ Resumen")
 
 if usar_manual:
     if candidatos:
