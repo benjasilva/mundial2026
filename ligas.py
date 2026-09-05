@@ -284,14 +284,13 @@ with st.expander(f"🏆 Ligas ({len(LIGAS)} disponibles)", expanded=False):
     ligas_sel = st.multiselect("Ligas", list(LIGAS.keys()), default=list(LIGAS.keys()), label_visibility="collapsed")
 
 estrategia = st.radio(
-    "Estrategia", ["Más seguro", "Value bets", "Manual"], horizontal=True,
+    "Estrategia", ["Más seguro", "Value bets"], horizontal=True,
     help="Más seguro: resultado más probable de cada partido. Value bets: mejor cuota vs. consenso del "
-         "mercado (necesita varias casas de apuestas para tener señal real). Manual: eliges cada resultado.",
+         "mercado (necesita varias casas de apuestas para tener señal real). Los partidos sugeridos vienen "
+         "marcados abajo, en 'Todos los partidos' — desmarca o marca los que quieras.",
 )
-usar_manual = estrategia == "Manual"
-if not usar_manual:
-    n_combinada = st.slider("Tamaño de la combinada", min_value=2, max_value=10, value=4,
-                             help="Número de partidos en la combinada. Xperto (Polla) usa entre 3 y 10.")
+n_combinada = st.slider("Tamaño de la combinada", min_value=2, max_value=10, value=4,
+                         help="Número de partidos sugeridos. Xperto (Polla) usa entre 3 y 10.")
 filtro_fecha = st.radio(
     "Fecha", ["Todos", "Fin de semana", "Entre semana"], horizontal=True,
     help="Fin de semana = vie-lun. Entre semana = mar-jue. Solo funciona con fecha real (API); en demo no hay fecha.",
@@ -329,55 +328,41 @@ if filtro_fecha != "Todos":
     datos_por_liga = {liga: filtra_por_fecha(partidos, filtro_fecha) for liga, partidos in datos_por_liga.items()}
 
 # =====================================================================
-# OPCIONES — cada partido expandido en sus 3 resultados posibles
-# (se calcula antes del layout para poder mostrarla en la columna derecha)
+# PARTIDOS — un registro por partido, con su resultado más probable
+# (se calcula antes del layout para poder usarlo en el Resumen)
 # =====================================================================
 usar_value = estrategia.startswith("Value")
 
-todas_opciones = []
+todos_partidos = []
 for liga, partidos in datos_por_liga.items():
     for p in partidos:
         etiqueta = {"L": f"Gana {p['local']}", "E": "Empate", "V": f"Gana {p['visita']}"}
-        edges = {k: p["prob"][k] * p["cuota"][k] - 1 for k in ("L", "E", "V")}
-        for k in ("L", "E", "V"):
-            todas_opciones.append({
-                "id_": f"{liga}||{p['local']} vs {p['visita']}||{k}",
-                "Liga": liga,
-                "Partido": f"{p['local']} vs {p['visita']}",
-                "Fecha": p["fecha"],
-                "Pronóstico": etiqueta[k],
-                "Probabilidad": p["prob"][k],
-                "Cuota": p["cuota"][k],
-                "Edge %": edges[k] * 100,
-                "Fuente": p["fuente"],
-            })
-todas_opciones.sort(key=lambda c: c["Probabilidad"], reverse=True)
+        mejor_k = max(p["prob"], key=p["prob"].get)
+        edge = p["prob"][mejor_k] * p["cuota"][mejor_k] - 1
+        todos_partidos.append({
+            "id_": f"{liga}||{p['local']} vs {p['visita']}",
+            "Liga": liga,
+            "Partido": f"{p['local']} vs {p['visita']}",
+            "fecha_dt": p.get("fecha_dt"),
+            "Fecha": p["fecha"],
+            "Pronóstico": etiqueta[mejor_k],
+            "Probabilidad": p["prob"][mejor_k],
+            "Cuota": p["cuota"][mejor_k],
+            "Edge %": edge * 100,
+            "Fuente": p["fuente"],
+        })
+todos_partidos.sort(key=lambda c: c["Probabilidad"], reverse=True)
 
-# candidatos = el mejor resultado (L/E/V) de cada partido — se usa para el
-# pick individual destacado y para las estrategias automáticas.
-candidatos = []
-vistos = set()
-for c in sorted(todas_opciones, key=lambda c: c["Edge %"] if usar_value else c["Probabilidad"], reverse=True):
-    if c["Partido"] in vistos:
-        continue
-    if usar_value and c["Edge %"] <= 0:
-        continue
-    vistos.add(c["Partido"])
-    candidatos.append(c)
-
-def _label(c):
-    return f"{fmt_pct(c['Probabilidad'] * 100)} · {c['Liga']} · {c['Partido']} · {c['Pronóstico']} · cuota {c['Cuota']:.2f}"
-
-if usar_manual:
-    # Los picks manuales se guardan en session_state por id_ estable — así
-    # sobreviven aunque cambies el filtro de fecha, las ligas o la estrategia
-    # (antes se perdían porque dependían de la lista de opciones del momento).
-    if "picks_manual" not in st.session_state:
-        st.session_state.picks_manual = {}
-    if "add_ms_counter" not in st.session_state:
-        st.session_state.add_ms_counter = 0
+# sugeridos = los que vienen pre-marcados en la lista de abajo, según la estrategia.
+if usar_value:
+    ranking = sorted([c for c in todos_partidos if c["Edge %"] > 0], key=lambda c: c["Edge %"], reverse=True)
 else:
-    elegidos = candidatos[:n_combinada]
+    ranking = todos_partidos
+sugeridos_ids = {c["id_"] for c in ranking[:n_combinada]}
+
+# elegidos = lo que esté marcado ahora mismo (leído de session_state antes de
+# dibujar las casillas, así el Resumen puede ir arriba de todo en la página).
+elegidos = [c for c in todos_partidos if st.session_state.get(f"chk_{c['id_']}", c["id_"] in sugeridos_ids)]
 
 # =====================================================================
 # RESUMEN — la mejor opción, arriba de todo (sin tener que scrollear
@@ -385,42 +370,11 @@ else:
 # =====================================================================
 st.markdown("## ⚽ Resumen")
 
-if usar_manual:
-    if candidatos:
-        mejor_ref = candidatos[0]
-        st.info(f"🥇 **{mejor_ref['Partido']}** — {mejor_ref['Pronóstico']} · {fmt_pct(mejor_ref['Probabilidad'] * 100)}")
-
-    visibles = {c["id_"]: c for c in todas_opciones}
-    disponibles = [i for i in visibles if i not in st.session_state.picks_manual]
-
-    add_key = f"add_manual_{st.session_state.add_ms_counter}"
-    nuevos = st.multiselect(
-        "Agregar partido",
-        options=disponibles,
-        format_func=lambda i: _label(visibles[i]),
-        key=add_key,
-        help="Busca por equipo o liga. Se guarda aunque cambies filtro o ligas.",
-    )
-    if nuevos:
-        for i in nuevos:
-            st.session_state.picks_manual[i] = visibles[i]
-        st.session_state.add_ms_counter += 1
-        st.rerun()
-
-    elegidos = list(st.session_state.picks_manual.values())
-
-    if elegidos:
-        c_vaciar, c_info = st.columns([1, 4])
-        if c_vaciar.button("🗑️ Vaciar"):
-            st.session_state.picks_manual = {}
-            st.rerun()
-        c_info.caption(f"{len(elegidos)} guardado(s).")
+if todos_partidos:
+    mejor = todos_partidos[0]
+    st.info(f"🥇 **{mejor['Partido']}** — {mejor['Pronóstico']} · {fmt_pct(mejor['Probabilidad'] * 100)}")
 
 if elegidos:
-    if not usar_manual:
-        mejor = candidatos[0]
-        st.info(f"🥇 **{mejor['Partido']}** — {mejor['Pronóstico']} · {fmt_pct(mejor['Probabilidad'] * 100)}")
-
     prob_combinada = np.prod([c["Probabilidad"] for c in elegidos])
     cuota_combinada = np.prod([c["Cuota"] for c in elegidos])
     usa_demo = any(c["Fuente"] == "Demo" for c in elegidos)
@@ -439,24 +393,11 @@ if elegidos:
         if usa_demo:
             st.caption("⚠️ Modo demo — cuotas simuladas.")
 
-    if usar_manual:
-        for id_, c in list(st.session_state.picks_manual.items()):
-            cq1, cq2 = st.columns([6, 1])
-            with cq1:
-                st.markdown(_pick_row_html(
-                    c["Partido"], f"<b>{c['Pronóstico']}</b><br>{fmt_pct(c['Probabilidad'] * 100)}",
-                ), unsafe_allow_html=True)
-            with cq2:
-                if st.button("✕", key=f"quitar_{id_}", help="Quitar"):
-                    del st.session_state.picks_manual[id_]
-                    st.rerun()
-    else:
-        for c in elegidos:
-            st.markdown(_pick_row_html(
-                c["Partido"], f"<b>{c['Pronóstico']}</b><br>{fmt_pct(c['Probabilidad'] * 100)}",
-            ), unsafe_allow_html=True)
-        if len(elegidos) < n_combinada:
-            st.caption(f"Solo hay {len(elegidos)} disponibles.")
+    for c in elegidos:
+        st.markdown(_pick_row_html(
+            c["Partido"], f"<b>{c['Pronóstico']}</b><br>{fmt_pct(c['Probabilidad'] * 100)}",
+        ), unsafe_allow_html=True)
+    st.caption("Marca o desmarca partidos en '📋 Todos los partidos' (abajo) para ajustar la combinada.")
 
     with st.expander("ℹ️ Xperto / Polla Gol"):
         st.markdown(
@@ -465,11 +406,9 @@ if elegidos:
             "cuota combinada, pero sí sirven las probabilidades de cada partido."
         )
     st.caption("Más partidos = menor probabilidad de acertar todos. Juega responsable.")
-elif usar_manual:
-    st.info("Todavía no elegiste ningún resultado — agrégalos arriba.")
 else:
-    st.warning("No hay partidos disponibles."
-               + (" 'Value bets' necesita partidos con edge positivo." if usar_value else ""))
+    st.warning("No hay partidos marcados."
+               + (" 'Value bets' necesita partidos con edge positivo." if usar_value else " Marca alguno en '📋 Todos los partidos' (abajo)."))
 
 # =====================================================================
 # REINVERSIÓN PROGRESIVA — apostar en cadena, más seguro primero
@@ -509,19 +448,32 @@ with st.expander("🔁 Reinversión progresiva (apostar en cadena)", expanded=Fa
         st.info("Elige partidos para simular la cadena.")
 
 # =====================================================================
-# DETALLE POR LIGA — partidos completos de cada liga/copa, colapsado
-# (queda abajo de todo: es información de referencia, no la respuesta)
+# TODOS LOS PARTIDOS — agrupados por fecha, con casilla para marcar o
+# desmarcar cada uno de la combinada. Los sugeridos vienen pre-marcados;
+# lo que se lea de acá abajo actualiza el Resumen de arriba en el próximo rerun.
 # =====================================================================
 st.markdown("---")
-with st.expander("📋 Partidos por liga", expanded=False):
-    tabs = st.tabs([f"{LIGAS[l]['emoji']} {l}" for l in ligas_sel])
-    for tab, liga in zip(tabs, ligas_sel):
-        with tab:
-            partidos = datos_por_liga[liga]
-            if not partidos:
-                st.caption("Sin partidos.")
-                continue
-            for p in partidos:
-                main = f"{p['local']} vs {p['visita']}"
-                stats = f"L {p['prob']['L'] * 100:.0f}% · E {p['prob']['E'] * 100:.0f}% · V {p['prob']['V'] * 100:.0f}%"
-                st.markdown(_pick_row_html(main, stats), unsafe_allow_html=True)
+DIAS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"]
+
+def _grupo_fecha(c):
+    dt = c["fecha_dt"]
+    if dt is None:
+        return "Sin fecha (demo)"
+    return f"{DIAS[dt.weekday()]} {dt.day:02d}/{dt.month:02d}"
+
+with st.expander(f"📋 Todos los partidos ({len(todos_partidos)})", expanded=False):
+    st.caption("Pre-marcados = sugeridos por la estrategia elegida. Marca o desmarca los que quieras.")
+    grupos = {}
+    for c in todos_partidos:
+        grupos.setdefault(_grupo_fecha(c), []).append(c)
+
+    def _orden_grupo(nombre):
+        dts = [c["fecha_dt"] for c in grupos[nombre] if c["fecha_dt"]]
+        return (1, None) if not dts else (0, min(dts))
+
+    for nombre_grupo in sorted(grupos, key=_orden_grupo):
+        st.markdown(f"**{nombre_grupo}**")
+        for c in grupos[nombre_grupo]:
+            emoji = LIGAS[c["Liga"]]["emoji"]
+            label = f"{emoji} {c['Partido']} — **{c['Pronóstico']} {fmt_pct(c['Probabilidad'] * 100)}**"
+            st.checkbox(label, value=(c["id_"] in sugeridos_ids), key=f"chk_{c['id_']}")
