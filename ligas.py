@@ -334,13 +334,18 @@ if filtro_fecha != "Todos":
 usar_value = estrategia.startswith("Value")
 
 todos_partidos = []
+ids_usados = set()
 for liga, partidos in datos_por_liga.items():
     for p in partidos:
         etiqueta = {"L": f"Gana {p['local']}", "E": "Empate", "V": f"Gana {p['visita']}"}
         mejor_k = max(p["prob"], key=p["prob"].get)
         edge = p["prob"][mejor_k] * p["cuota"][mejor_k] - 1
+        id_ = f"{liga}||{p['local']} vs {p['visita']}||{p['fecha']}"
+        if id_ in ids_usados:
+            id_ = f"{id_}||{len(ids_usados)}"  # salvaguarda si dos partidos generan el mismo id
+        ids_usados.add(id_)
         todos_partidos.append({
-            "id_": f"{liga}||{p['local']} vs {p['visita']}",
+            "id_": id_,
             "Liga": liga,
             "Partido": f"{p['local']} vs {p['visita']}",
             "fecha_dt": p.get("fecha_dt"),
