@@ -21,8 +21,26 @@ st.markdown("""
     padding: 0.5rem 1rem 1rem 1rem;
     background-color: rgba(150, 150, 150, 0.08);
 }
+.pick-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.8rem;
+    margin-bottom: 0.4rem;
+    border: 1px solid rgba(150, 150, 150, 0.3);
+    border-radius: 8px;
+    background-color: rgba(150, 150, 150, 0.05);
+}
+.pick-row .pr-main { font-size: 0.85rem; line-height: 1.35; }
+.pick-row .pr-main .pr-sub { opacity: 0.7; }
+.pick-row .pr-stats { font-size: 0.8rem; line-height: 1.35; opacity: 0.9; text-align: right; white-space: nowrap; }
 </style>
 """, unsafe_allow_html=True)
+
+
+def _pick_row_html(main_html, stats_html):
+    return f'<div class="pick-row"><div class="pr-main">{main_html}</div><div class="pr-stats">{stats_html}</div></div>'
 
 # =====================================================================
 # LIGAS SOPORTADAS — nombre visible -> sport key de The Odds API
@@ -420,21 +438,28 @@ if elegidos:
         st.caption("Los que elegiste vos arriba — tocá 'Quitar' para sacar alguno.")
         for id_, c in list(st.session_state.picks_manual.items()):
             cq1, cq2 = st.columns([6, 1])
-            cq1.markdown(f"**{c['Liga']}** · {c['Partido']} · *{c['Pronóstico']}* · {fmt_pct(c['Probabilidad'] * 100)} · cuota {c['Cuota']:.2f} · {c['Fuente']}")
-            if cq2.button("Quitar", key=f"quitar_{id_}"):
-                del st.session_state.picks_manual[id_]
-                st.rerun()
+            with cq1:
+                st.markdown(_pick_row_html(
+                    f"<b>{c['Liga']}</b> · {c['Partido']}<br><span class='pr-sub'>{c['Pronóstico']}</span>",
+                    f"{fmt_pct(c['Probabilidad'] * 100)}<br>cuota {c['Cuota']:.2f}",
+                ), unsafe_allow_html=True)
+            with cq2:
+                if st.button("Quitar", key=f"quitar_{id_}"):
+                    del st.session_state.picks_manual[id_]
+                    st.rerun()
     else:
         if usar_value:
             st.caption("Por cada partido se toma el resultado con mejor edge (probabilidad × cuota − 1) entre los que tienen valor positivo; se descartan los partidos sin ninguna opción con edge > 0.")
         else:
             st.caption("Por cada partido se toma el resultado (Local/Empate/Visita) con mayor probabilidad; estos son los N más altos entre todas las ligas elegidas.")
-        df_comb_view = pd.DataFrame(elegidos).copy()
-        df_comb_view["Probabilidad"] = (df_comb_view["Probabilidad"] * 100).round(1).astype(str) + "%"
-        df_comb_view["Edge %"] = df_comb_view["Edge %"].round(1)
-        if not usar_value:
-            df_comb_view = df_comb_view.drop(columns=["Edge %"])
-        st.dataframe(df_comb_view, use_container_width=True, hide_index=True)
+        for c in elegidos:
+            stats = f"{fmt_pct(c['Probabilidad'] * 100)}<br>cuota {c['Cuota']:.2f}"
+            if usar_value:
+                stats += f"<br>edge {c['Edge %']:.1f}%"
+            st.markdown(_pick_row_html(
+                f"<b>{c['Liga']}</b> · {c['Partido']}<br><span class='pr-sub'>{c['Pronóstico']} · {c['Fuente']}</span>",
+                stats,
+            ), unsafe_allow_html=True)
         if len(elegidos) < n_combinada:
             st.warning(f"Solo hay {len(elegidos)} partidos con valor positivo disponibles entre las ligas elegidas."
                        if usar_value else
@@ -483,7 +508,6 @@ if elegidos:
              "de un capital final menor si aciertas todos los pasos.",
     )
 
-    filas_cadena = []
     en_juego = capital_inicial
     guardado = 0.0
     prob_acum = 1.0
@@ -492,19 +516,15 @@ if elegidos:
         apostado = en_juego * (pct_reinversion / 100)
         guardado += en_juego - apostado
         en_juego = apostado * c["Cuota"]
-        filas_cadena.append({
-            "Paso": i,
-            "Partido": c["Partido"],
-            "Pronóstico": c["Pronóstico"],
-            "Prob. del paso": fmt_pct(c['Probabilidad'] * 100),
-            "Prob. de llegar hasta acá": fmt_pct(prob_acum * 100),
-            "Apostado": f"${apostado:,.0f}",
-            "Si ganas, capital en juego": f"${en_juego:,.0f}",
-            "Guardado (no arriesgado)": f"${guardado:,.0f}",
-            "Total si cortas acá": f"${en_juego + guardado:,.0f}",
-        })
 
-    st.dataframe(pd.DataFrame(filas_cadena), use_container_width=True, hide_index=True)
+        main = (f"<b>Paso {i}</b> · {c['Partido']}<br>"
+                f"<span class='pr-sub'>{c['Pronóstico']} · {fmt_pct(c['Probabilidad'] * 100)} del paso "
+                f"(acumulada {fmt_pct(prob_acum * 100)})</span>")
+        stats = f"Apostado ${apostado:,.0f}<br>Si ganás: ${en_juego:,.0f}"
+        if guardado > 0.01:
+            stats += f"<br>Guardado: ${guardado:,.0f}"
+        stats += f"<br><b>Total si cortás: ${en_juego + guardado:,.0f}</b>"
+        st.markdown(_pick_row_html(main, stats), unsafe_allow_html=True)
     st.caption(
         f"Capital inicial ${capital_inicial:,.0f}. Con 100% de reinversión, el resultado final es matemáticamente "
         f"igual a la combinada de una sola boleta con estos {len(cadena)} partidos. Bajar el % de reinversión te "
