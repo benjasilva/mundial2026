@@ -275,100 +275,73 @@ for liga, partidos in datos_por_liga.items():
 candidatos.sort(key=lambda c: c["Edge %"] if usar_value else c["Probabilidad"], reverse=True)
 elegidos = candidatos[:n_combinada]
 
-col_izq, col_der = st.columns([2, 1], gap="large")
+# =====================================================================
+# RESUMEN — la mejor opción, arriba de todo (sin tener que scrollear
+# los partidos por liga para llegar a esto, sobre todo en el celular)
+# =====================================================================
+st.markdown("## 🎯 Resumen — mejor opción ahora")
 
-# ── Columna izquierda: partidos y picks ─────────────────────────────
-with col_izq:
-    st.markdown("### 📋 Partidos y resultados")
-    tabs = st.tabs([f"{LIGAS[l]['emoji']} {l}" for l in ligas_sel])
-    for tab, liga in zip(tabs, ligas_sel):
-        with tab:
-            partidos = datos_por_liga[liga]
-            if not partidos:
-                st.warning("No hay partidos disponibles para esta liga.")
-                continue
-            filas = []
-            for p in partidos:
-                filas.append({
-                    "Partido": f"{p['local']} vs {p['visita']}",
-                    "Fecha": p["fecha"],
-                    "Local %": round(p["prob"]["L"] * 100, 1),
-                    "Empate %": round(p["prob"]["E"] * 100, 1),
-                    "Visita %": round(p["prob"]["V"] * 100, 1),
-                    "Cuota L": p["cuota"]["L"],
-                    "Cuota E": p["cuota"]["E"],
-                    "Cuota V": p["cuota"]["V"],
-                    "Fuente": p["fuente"],
-                })
-            df = pd.DataFrame(filas)
-            st.dataframe(
-                df.style
-                    .background_gradient(subset=["Local %", "Empate %", "Visita %"], cmap="Blues")
-                    .format({"Local %": "{:.1f}", "Empate %": "{:.1f}", "Visita %": "{:.1f}",
-                              "Cuota L": "{:.2f}", "Cuota E": "{:.2f}", "Cuota V": "{:.2f}"}),
-                use_container_width=True, hide_index=True,
-            )
+if elegidos:
+    mejor = candidatos[0]
+    st.info(
+        f"🥇 **Pick individual más {'valioso' if usar_value else 'seguro'} de hoy:** {mejor['Pronóstico']} "
+        f"— *{mejor['Partido']}* ({mejor['Liga']}) · {fmt_pct(mejor['Probabilidad'] * 100)} · cuota {mejor['Cuota']:.2f}"
+    )
+
+    prob_combinada = np.prod([c["Probabilidad"] for c in elegidos])
+    cuota_combinada = np.prod([c["Cuota"] for c in elegidos])
+    usa_demo = any(c["Fuente"] == "Demo" for c in elegidos)
+
+    with st.container(border=True):
+        m1, m2 = st.columns(2)
+        m1.metric("Probabilidad conjunta", fmt_pct(prob_combinada * 100))
+        m2.metric("Cuota combinada (referencial)", f"{cuota_combinada:.2f}")
+        if usa_demo:
+            st.caption("⚠️ Incluye partidos en modo demo (cuotas simuladas, no reales).")
+
+        st.markdown("##### 💰 ¿Cuánto te darían?")
+        monto = st.number_input("Monto a apostar ($)", min_value=500, step=500, value=5000)
+        retorno = monto * cuota_combinada
+        r1, r2 = st.columns(2)
+        r1.metric("Retorno si aciertas todo", f"${retorno:,.0f}")
+        r2.metric("Ganancia neta", f"${retorno - monto:,.0f}")
 
     st.markdown("#### 🔮 Picks de la combinada")
     if usar_value:
         st.caption("Por cada partido se toma el resultado con mejor edge (probabilidad × cuota − 1) entre los que tienen valor positivo; se descartan los partidos sin ninguna opción con edge > 0.")
     else:
         st.caption("Por cada partido se toma el resultado (Local/Empate/Visita) con mayor probabilidad; estos son los N más altos entre todas las ligas elegidas.")
-    if elegidos:
-        df_comb_view = pd.DataFrame(elegidos).copy()
-        df_comb_view["Probabilidad"] = (df_comb_view["Probabilidad"] * 100).round(1).astype(str) + "%"
-        df_comb_view["Edge %"] = df_comb_view["Edge %"].round(1)
-        if not usar_value:
-            df_comb_view = df_comb_view.drop(columns=["Edge %"])
-        st.dataframe(df_comb_view, use_container_width=True, hide_index=True)
-        if len(elegidos) < n_combinada:
-            st.warning(f"Solo hay {len(elegidos)} partidos con valor positivo disponibles entre las ligas elegidas."
-                       if usar_value else
-                       f"Solo hay {len(elegidos)} partidos disponibles entre las ligas elegidas.")
-    else:
-        st.warning("No hay partidos disponibles para armar una combinada."
-                   + (" Prueba con 'Más seguro' o suma más ligas — 'Value bets' necesita partidos con edge positivo." if usar_value else ""))
+    df_comb_view = pd.DataFrame(elegidos).copy()
+    df_comb_view["Probabilidad"] = (df_comb_view["Probabilidad"] * 100).round(1).astype(str) + "%"
+    df_comb_view["Edge %"] = df_comb_view["Edge %"].round(1)
+    if not usar_value:
+        df_comb_view = df_comb_view.drop(columns=["Edge %"])
+    st.dataframe(df_comb_view, use_container_width=True, hide_index=True)
+    if len(elegidos) < n_combinada:
+        st.warning(f"Solo hay {len(elegidos)} partidos con valor positivo disponibles entre las ligas elegidas."
+                   if usar_value else
+                   f"Solo hay {len(elegidos)} partidos disponibles entre las ligas elegidas.")
 
-# ── Columna derecha: probabilidad total + simulador de monto ───────
-with col_der:
-    st.markdown("### 📊 Probabilidad total")
-    if elegidos:
-        prob_combinada = np.prod([c["Probabilidad"] for c in elegidos])
-        cuota_combinada = np.prod([c["Cuota"] for c in elegidos])
-        usa_demo = any(c["Fuente"] == "Demo" for c in elegidos)
-
-        with st.container(border=True):
-            st.metric("Probabilidad conjunta", fmt_pct(prob_combinada * 100))
-            st.metric("Cuota combinada (referencial)", f"{cuota_combinada:.2f}")
-            if usa_demo:
-                st.caption("⚠️ Incluye partidos en modo demo (cuotas simuladas, no reales).")
-
-        st.markdown("### 💰 ¿Cuánto te darían?")
-        with st.container(border=True):
-            monto = st.number_input("Monto a apostar ($)", min_value=500, step=500, value=5000)
-            retorno = monto * cuota_combinada
-            st.metric("Retorno si aciertas todo", f"${retorno:,.0f}")
-            st.metric("Ganancia neta", f"${retorno - monto:,.0f}")
-
-        with st.expander("ℹ️ Nota sobre Xperto, Polla Gol y casas internacionales"):
-            st.markdown(
-                "**[Xperto](https://xperto.polla.cl)** (Polla Chilena) es cuota fija, igual que este simulador: "
-                "arma sus jugadas combinadas con 3 a 10 eventos, tal como el slider de arriba. Es la opción local "
-                "más alineada con esta herramienta — pero Xperto no publica una API de cuotas, así que los números "
-                "acá vienen de casas internacionales (The Odds API) o del modo demo: son **referenciales**, no las "
-                "cuotas exactas que fija Xperto para cada partido.\n\n"
-                "**Polla Gol**, en cambio, es un pozo (pari-mutuel): el premio por categoría (11 a 14 aciertos) "
-                "depende de cuánta gente más acertó esa semana, no de una cuota fija — ahí no aplica el cálculo de "
-                "cuota combinada, pero sí te sirven las **probabilidades por partido** (arriba) para elegir tus picks."
-            )
-
-        st.caption(
-            "La probabilidad conjunta es el producto de probabilidades individuales — a más partidos en la "
-            "combinada, menor la chance de acertarla completa aunque la cuota suba. Información orientativa, "
-            "no una recomendación de apuesta. Juega responsable."
+    with st.expander("ℹ️ Nota sobre Xperto, Polla Gol y casas internacionales"):
+        st.markdown(
+            "**[Xperto](https://xperto.polla.cl)** (Polla Chilena) es cuota fija, igual que este simulador: "
+            "arma sus jugadas combinadas con 3 a 10 eventos, tal como el slider de arriba. Es la opción local "
+            "más alineada con esta herramienta — pero Xperto no publica una API de cuotas, así que los números "
+            "acá vienen de casas internacionales (The Odds API) o del modo demo: son **referenciales**, no las "
+            "cuotas exactas que fija Xperto para cada partido.\n\n"
+            "**Polla Gol**, en cambio, es un pozo (pari-mutuel): el premio por categoría (11 a 14 aciertos) "
+            "depende de cuánta gente más acertó esa semana, no de una cuota fija — ahí no aplica el cálculo de "
+            "cuota combinada, pero sí te sirven las **probabilidades por partido** (abajo) para elegir tus picks."
         )
-    else:
-        st.info("Elige ligas con partidos disponibles para ver la probabilidad total.")
+
+    st.caption(
+        "La probabilidad conjunta es el producto de probabilidades individuales — a más partidos en la "
+        "combinada, menor la chance de acertarla completa aunque la cuota suba. Información orientativa, "
+        "no una recomendación de apuesta. Juega responsable."
+    )
+else:
+    st.warning("No hay partidos disponibles para armar una combinada."
+               + (" Prueba con 'Más seguro' o suma más ligas — 'Value bets' necesita partidos con edge positivo." if usar_value else ""))
 
 # =====================================================================
 # REINVERSIÓN PROGRESIVA — apostar en cadena, más seguro primero
@@ -419,4 +392,39 @@ if elegidos:
         "capital final menor si aciertas todos los pasos."
     )
 else:
-    st.info("Elegí partidos para simular la cadena de reinversión.")
+    st.info("Elige partidos para simular la cadena de reinversión.")
+
+# =====================================================================
+# DETALLE POR LIGA — partidos completos de cada liga/copa, colapsado
+# (queda abajo de todo: es información de referencia, no la respuesta)
+# =====================================================================
+st.markdown("---")
+with st.expander("📋 Ver todos los partidos por liga (detalle completo)", expanded=False):
+    tabs = st.tabs([f"{LIGAS[l]['emoji']} {l}" for l in ligas_sel])
+    for tab, liga in zip(tabs, ligas_sel):
+        with tab:
+            partidos = datos_por_liga[liga]
+            if not partidos:
+                st.warning("No hay partidos disponibles para esta liga.")
+                continue
+            filas = []
+            for p in partidos:
+                filas.append({
+                    "Partido": f"{p['local']} vs {p['visita']}",
+                    "Fecha": p["fecha"],
+                    "Local %": round(p["prob"]["L"] * 100, 1),
+                    "Empate %": round(p["prob"]["E"] * 100, 1),
+                    "Visita %": round(p["prob"]["V"] * 100, 1),
+                    "Cuota L": p["cuota"]["L"],
+                    "Cuota E": p["cuota"]["E"],
+                    "Cuota V": p["cuota"]["V"],
+                    "Fuente": p["fuente"],
+                })
+            df = pd.DataFrame(filas)
+            st.dataframe(
+                df.style
+                    .background_gradient(subset=["Local %", "Empate %", "Visita %"], cmap="Blues")
+                    .format({"Local %": "{:.1f}", "Empate %": "{:.1f}", "Visita %": "{:.1f}",
+                              "Cuota L": "{:.2f}", "Cuota E": "{:.2f}", "Cuota V": "{:.2f}"}),
+                use_container_width=True, hide_index=True,
+            )
