@@ -107,9 +107,14 @@ def _parse_evento(ev):
     avg = {k: sum(v) / len(v) for k, v in cuotas.items()}
     best = {k: max(v) for k, v in cuotas.items()}
     probs = _devig(avg["L"], avg["E"], avg["V"])
-    fecha = ev.get("commence_time", "")[:16].replace("T", " ")
+    commence_time = ev.get("commence_time", "")
+    fecha = commence_time[:16].replace("T", " ")
+    try:
+        fecha_dt = datetime.strptime(commence_time, "%Y-%m-%dT%H:%M:%SZ")
+    except ValueError:
+        fecha_dt = None
     return {
-        "local": home, "visita": away, "fecha": fecha,
+        "local": home, "visita": away, "fecha": fecha, "fecha_dt": fecha_dt,
         "prob": probs, "cuota": best, "n_casas": len(cuotas["L"]), "fuente": "API",
     }
 
@@ -147,10 +152,27 @@ def partidos_demo(nombre_liga):
         margen = 1.06
         cuota = {k: round(margen / v, 2) for k, v in probs.items()}
         partidos.append({
-            "local": local, "visita": visita, "fecha": "(demo, sin fecha real)",
+            "local": local, "visita": visita, "fecha": "(demo, sin fecha real)", "fecha_dt": None,
             "prob": probs, "cuota": cuota, "n_casas": 0, "fuente": "Demo",
         })
     return partidos
+
+
+def filtra_por_fecha(partidos, filtro):
+    """Filtra partidos por día de semana según fecha_dt real. Los sin fecha real (demo) se excluyen si hay filtro activo."""
+    if filtro == "Todos":
+        return partidos
+    out = []
+    for p in partidos:
+        dt = p.get("fecha_dt")
+        if dt is None:
+            continue
+        wd = dt.weekday()  # lunes=0 ... domingo=6
+        if filtro.startswith("Fin de semana") and wd in (4, 5, 6, 0):  # vie, sáb, dom, lun
+            out.append(p)
+        elif filtro.startswith("Entre semana") and wd in (1, 2, 3):  # mar, mié, jue
+            out.append(p)
+    return out
 
 
 # =====================================================================
@@ -217,6 +239,13 @@ estrategia = st.radio(
          "mercado — necesita cuotas de varias casas para tener señal real. En modo demo el edge sale igual (constante) "
          "para las 3 opciones de cada partido, así que no hay señal real de valor.",
 )
+filtro_fecha = st.radio(
+    "Filtrar partidos por fecha",
+    ["Todos", "Fin de semana (vie-lun)", "Entre semana (mar-jue)"],
+    horizontal=True,
+    help="Se aplica solo a partidos con fecha real (fuente API) — los partidos demo no tienen fecha real y "
+         "quedan excluidos si elegís un filtro distinto de 'Todos'.",
+)
 
 st.markdown("---")
 
@@ -243,6 +272,11 @@ with st.spinner("Consultando partidos y cuotas..."):
 
 for a in avisos:
     st.info(a)
+
+if filtro_fecha != "Todos":
+    if not api_key:
+        st.warning("El filtro de fecha necesita partidos con fecha real (API) — en modo demo no hay fecha, así que no va a quedar ningún partido.")
+    datos_por_liga = {liga: filtra_por_fecha(partidos, filtro_fecha) for liga, partidos in datos_por_liga.items()}
 
 # =====================================================================
 # COMBINADA — top N picks por mayor probabilidad, un pick por partido
