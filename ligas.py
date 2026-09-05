@@ -307,6 +307,7 @@ for liga, partidos in datos_por_liga.items():
         edges = {k: p["prob"][k] * p["cuota"][k] - 1 for k in ("L", "E", "V")}
         for k in ("L", "E", "V"):
             todas_opciones.append({
+                "id_": f"{liga}||{p['local']} vs {p['visita']}||{k}",
                 "Liga": liga,
                 "Partido": f"{p['local']} vs {p['visita']}",
                 "Fecha": p["fecha"],
@@ -330,10 +331,17 @@ for c in sorted(todas_opciones, key=lambda c: c["Edge %"] if usar_value else c["
     vistos.add(c["Partido"])
     candidatos.append(c)
 
+def _label(c):
+    return f"{fmt_pct(c['Probabilidad'] * 100)} · {c['Liga']} · {c['Partido']} · {c['Pronóstico']} · cuota {c['Cuota']:.2f}"
+
 if usar_manual:
-    def _label(c):
-        return f"{fmt_pct(c['Probabilidad'] * 100)} · {c['Liga']} · {c['Partido']} · {c['Pronóstico']} · cuota {c['Cuota']:.2f}"
-    opcion_por_label = {_label(c): c for c in todas_opciones}
+    # Los picks manuales se guardan en session_state por id_ estable — así
+    # sobreviven aunque cambies el filtro de fecha, las ligas o la estrategia
+    # (antes se perdían porque dependían de la lista de opciones del momento).
+    if "picks_manual" not in st.session_state:
+        st.session_state.picks_manual = {}
+    if "add_ms_counter" not in st.session_state:
+        st.session_state.add_ms_counter = 0
 else:
     elegidos = candidatos[:n_combinada]
 
@@ -350,14 +358,34 @@ if usar_manual:
             f"🥇 **Pick individual más seguro de hoy (referencia):** {mejor_ref['Pronóstico']} "
             f"— *{mejor_ref['Partido']}* ({mejor_ref['Liga']}) · {fmt_pct(mejor_ref['Probabilidad'] * 100)} · cuota {mejor_ref['Cuota']:.2f}"
         )
-    labels_sel = st.multiselect(
-        "Elige los resultados para tu combinada",
-        options=list(opcion_por_label.keys()),
-        default=[],
-        help="Cada opción es un resultado (Local/Empate/Visita) de un partido. Ordenadas de mayor a menor "
-             "probabilidad. Podés escribir para buscar por equipo o liga.",
+
+    visibles = {c["id_"]: c for c in todas_opciones}
+    disponibles = [i for i in visibles if i not in st.session_state.picks_manual]
+
+    add_key = f"add_manual_{st.session_state.add_ms_counter}"
+    nuevos = st.multiselect(
+        "Agregar resultados a la combinada",
+        options=disponibles,
+        format_func=lambda i: _label(visibles[i]),
+        key=add_key,
+        help="Cada opción es un resultado (Local/Empate/Visita) de un partido, ordenadas de mayor a menor "
+             "probabilidad. Escribí para buscar por equipo o liga. Lo que agregues queda guardado aunque después "
+             "cambies el filtro de fecha o las ligas elegidas.",
     )
-    elegidos = [opcion_por_label[l] for l in labels_sel]
+    if nuevos:
+        for i in nuevos:
+            st.session_state.picks_manual[i] = visibles[i]
+        st.session_state.add_ms_counter += 1
+        st.rerun()
+
+    elegidos = list(st.session_state.picks_manual.values())
+
+    if elegidos:
+        c_vaciar, c_info = st.columns([1, 4])
+        if c_vaciar.button("🗑️ Vaciar selección"):
+            st.session_state.picks_manual = {}
+            st.rerun()
+        c_info.caption(f"Guardaste {len(elegidos)} resultado(s). Los que no aparecen en 'Agregar' de arriba ya están en tu combinada (mirá la tabla de abajo para quitarlos uno por uno).")
 
 if elegidos:
     if not usar_manual:
@@ -389,21 +417,28 @@ if elegidos:
 
     st.markdown("#### 🔮 Picks de la combinada")
     if usar_manual:
-        st.caption("Los que elegiste vos arriba.")
-    elif usar_value:
-        st.caption("Por cada partido se toma el resultado con mejor edge (probabilidad × cuota − 1) entre los que tienen valor positivo; se descartan los partidos sin ninguna opción con edge > 0.")
+        st.caption("Los que elegiste vos arriba — tocá 'Quitar' para sacar alguno.")
+        for id_, c in list(st.session_state.picks_manual.items()):
+            cq1, cq2 = st.columns([6, 1])
+            cq1.markdown(f"**{c['Liga']}** · {c['Partido']} · *{c['Pronóstico']}* · {fmt_pct(c['Probabilidad'] * 100)} · cuota {c['Cuota']:.2f} · {c['Fuente']}")
+            if cq2.button("Quitar", key=f"quitar_{id_}"):
+                del st.session_state.picks_manual[id_]
+                st.rerun()
     else:
-        st.caption("Por cada partido se toma el resultado (Local/Empate/Visita) con mayor probabilidad; estos son los N más altos entre todas las ligas elegidas.")
-    df_comb_view = pd.DataFrame(elegidos).copy()
-    df_comb_view["Probabilidad"] = (df_comb_view["Probabilidad"] * 100).round(1).astype(str) + "%"
-    df_comb_view["Edge %"] = df_comb_view["Edge %"].round(1)
-    if not usar_value:
-        df_comb_view = df_comb_view.drop(columns=["Edge %"])
-    st.dataframe(df_comb_view, use_container_width=True, hide_index=True)
-    if not usar_manual and len(elegidos) < n_combinada:
-        st.warning(f"Solo hay {len(elegidos)} partidos con valor positivo disponibles entre las ligas elegidas."
-                   if usar_value else
-                   f"Solo hay {len(elegidos)} partidos disponibles entre las ligas elegidas.")
+        if usar_value:
+            st.caption("Por cada partido se toma el resultado con mejor edge (probabilidad × cuota − 1) entre los que tienen valor positivo; se descartan los partidos sin ninguna opción con edge > 0.")
+        else:
+            st.caption("Por cada partido se toma el resultado (Local/Empate/Visita) con mayor probabilidad; estos son los N más altos entre todas las ligas elegidas.")
+        df_comb_view = pd.DataFrame(elegidos).copy()
+        df_comb_view["Probabilidad"] = (df_comb_view["Probabilidad"] * 100).round(1).astype(str) + "%"
+        df_comb_view["Edge %"] = df_comb_view["Edge %"].round(1)
+        if not usar_value:
+            df_comb_view = df_comb_view.drop(columns=["Edge %"])
+        st.dataframe(df_comb_view, use_container_width=True, hide_index=True)
+        if len(elegidos) < n_combinada:
+            st.warning(f"Solo hay {len(elegidos)} partidos con valor positivo disponibles entre las ligas elegidas."
+                       if usar_value else
+                       f"Solo hay {len(elegidos)} partidos disponibles entre las ligas elegidas.")
 
     with st.expander("ℹ️ Nota sobre Xperto, Polla Gol y casas internacionales"):
         st.markdown(
