@@ -1,6 +1,5 @@
 import streamlit as st
 import numpy as np
-import pandas as pd
 import requests
 from datetime import datetime
 
@@ -258,27 +257,21 @@ with st.expander("⚙️ Configuración — The Odds API (opcional pero recomend
 
 api_key = st.session_state.odds_api_key.strip()
 
-ligas_sel = st.multiselect("Ligas a incluir", list(LIGAS.keys()), default=list(LIGAS.keys()))
+with st.expander(f"🏆 Ligas ({len(LIGAS)} disponibles)", expanded=False):
+    ligas_sel = st.multiselect("Ligas", list(LIGAS.keys()), default=list(LIGAS.keys()), label_visibility="collapsed")
+
 estrategia = st.radio(
-    "Estrategia para elegir los picks",
-    ["Más seguro (mayor probabilidad)", "Value bets (mejor cuota vs. consenso)", "Manual (elijo yo)"],
-    horizontal=True,
-    help="'Más seguro' toma el resultado más probable de cada partido (cuota baja, alta chance de acertar). "
-         "'Value bets' busca partidos donde la mejor cuota disponible paga más de lo que indica el consenso del "
-         "mercado — necesita cuotas de varias casas para tener señal real. En modo demo el edge sale igual (constante) "
-         "para las 3 opciones de cada partido, así que no hay señal real de valor. "
-         "'Manual' te deja elegir vos mismo qué resultado de qué partido incluir.",
+    "Estrategia", ["Más seguro", "Value bets", "Manual"], horizontal=True,
+    help="Más seguro: resultado más probable de cada partido. Value bets: mejor cuota vs. consenso del "
+         "mercado (necesita varias casas de apuestas para tener señal real). Manual: eliges cada resultado.",
 )
-usar_manual = estrategia.startswith("Manual")
+usar_manual = estrategia == "Manual"
 if not usar_manual:
-    n_combinada = st.slider("Tamaño de la combinada (número de partidos)", min_value=2, max_value=10, value=4,
-                             help="Xperto (Polla) arma sus jugadas combinadas con entre 3 y 10 eventos.")
+    n_combinada = st.slider("Tamaño de la combinada", min_value=2, max_value=10, value=4,
+                             help="Número de partidos en la combinada. Xperto (Polla) usa entre 3 y 10.")
 filtro_fecha = st.radio(
-    "Filtrar partidos por fecha",
-    ["Todos", "Fin de semana (vie-lun)", "Entre semana (mar-jue)"],
-    horizontal=True,
-    help="Se aplica solo a partidos con fecha real (fuente API) — los partidos demo no tienen fecha real y "
-         "quedan excluidos si elegís un filtro distinto de 'Todos'.",
+    "Fecha", ["Todos", "Fin de semana", "Entre semana"], horizontal=True,
+    help="Fin de semana = vie-lun. Entre semana = mar-jue. Solo funciona con fecha real (API); en demo no hay fecha.",
 )
 
 st.markdown("---")
@@ -367,28 +360,23 @@ else:
 # RESUMEN — la mejor opción, arriba de todo (sin tener que scrollear
 # los partidos por liga para llegar a esto, sobre todo en el celular)
 # =====================================================================
-st.markdown("## 🎯 Resumen — mejor opción ahora")
+st.markdown("## 🎯 Resumen")
 
 if usar_manual:
     if candidatos:
         mejor_ref = candidatos[0]
-        st.info(
-            f"🥇 **Pick individual más seguro de hoy (referencia):** {mejor_ref['Pronóstico']} "
-            f"— *{mejor_ref['Partido']}* ({mejor_ref['Liga']}) · {fmt_pct(mejor_ref['Probabilidad'] * 100)} · cuota {mejor_ref['Cuota']:.2f}"
-        )
+        st.info(f"🥇 **{mejor_ref['Partido']}** — {mejor_ref['Pronóstico']} · {fmt_pct(mejor_ref['Probabilidad'] * 100)}")
 
     visibles = {c["id_"]: c for c in todas_opciones}
     disponibles = [i for i in visibles if i not in st.session_state.picks_manual]
 
     add_key = f"add_manual_{st.session_state.add_ms_counter}"
     nuevos = st.multiselect(
-        "Agregar resultados a la combinada",
+        "Agregar partido",
         options=disponibles,
         format_func=lambda i: _label(visibles[i]),
         key=add_key,
-        help="Cada opción es un resultado (Local/Empate/Visita) de un partido, ordenadas de mayor a menor "
-             "probabilidad. Escribí para buscar por equipo o liga. Lo que agregues queda guardado aunque después "
-             "cambies el filtro de fecha o las ligas elegidas.",
+        help="Busca por equipo o liga. Se guarda aunque cambies filtro o ligas.",
     )
     if nuevos:
         for i in nuevos:
@@ -400,171 +388,115 @@ if usar_manual:
 
     if elegidos:
         c_vaciar, c_info = st.columns([1, 4])
-        if c_vaciar.button("🗑️ Vaciar selección"):
+        if c_vaciar.button("🗑️ Vaciar"):
             st.session_state.picks_manual = {}
             st.rerun()
-        c_info.caption(f"Guardaste {len(elegidos)} resultado(s). Los que no aparecen en 'Agregar' de arriba ya están en tu combinada (mirá la tabla de abajo para quitarlos uno por uno).")
+        c_info.caption(f"{len(elegidos)} guardado(s).")
 
 if elegidos:
     if not usar_manual:
         mejor = candidatos[0]
-        st.info(
-            f"🥇 **Pick individual más {'valioso' if usar_value else 'seguro'} de hoy:** {mejor['Pronóstico']} "
-            f"— *{mejor['Partido']}* ({mejor['Liga']}) · {fmt_pct(mejor['Probabilidad'] * 100)} · cuota {mejor['Cuota']:.2f}"
-        )
+        st.info(f"🥇 **{mejor['Partido']}** — {mejor['Pronóstico']} · {fmt_pct(mejor['Probabilidad'] * 100)}")
 
     prob_combinada = np.prod([c["Probabilidad"] for c in elegidos])
     cuota_combinada = np.prod([c["Cuota"] for c in elegidos])
     usa_demo = any(c["Fuente"] == "Demo" for c in elegidos)
 
     with st.container(border=True):
-        st.markdown("##### 📊 Probabilidad total")
         m1, m2 = st.columns(2)
-        m1.metric("Probabilidad conjunta", fmt_pct(prob_combinada * 100))
-        m2.metric("Cuota combinada (referencial)", f"{cuota_combinada:.2f}")
-        if usa_demo:
-            st.caption("⚠️ Incluye partidos en modo demo (cuotas simuladas, no reales).")
-
-    with st.container(border=True):
-        st.markdown("##### 💰 ¿Cuánto te darían?")
-        monto = st.number_input("Monto a apostar ($)", min_value=500, step=500, value=5000)
+        m1.metric("Probabilidad", fmt_pct(prob_combinada * 100))
+        m2.metric("Cuota", f"{cuota_combinada:.2f}")
+        monto = st.number_input("Monto ($)", min_value=500, step=500, value=5000)
         retorno = monto * cuota_combinada
         r1, r2 = st.columns(2)
-        r1.metric("Retorno si aciertas todo", f"${retorno:,.0f}")
-        r2.metric("Ganancia neta", f"${retorno - monto:,.0f}")
+        r1.metric("Retorno", f"${retorno:,.0f}")
+        r2.metric("Ganancia", f"${retorno - monto:,.0f}")
+        if usa_demo:
+            st.caption("⚠️ Modo demo — cuotas simuladas.")
 
-    st.markdown("#### 🔮 Picks de la combinada")
     if usar_manual:
-        st.caption("Los que elegiste vos arriba — tocá 'Quitar' para sacar alguno.")
         for id_, c in list(st.session_state.picks_manual.items()):
             cq1, cq2 = st.columns([6, 1])
             with cq1:
                 st.markdown(_pick_row_html(
-                    f"<b>{c['Liga']}</b> · {c['Partido']}<br><span class='pr-sub'>{c['Pronóstico']}</span>",
-                    f"{fmt_pct(c['Probabilidad'] * 100)}<br>cuota {c['Cuota']:.2f}",
+                    c["Partido"], f"<b>{c['Pronóstico']}</b><br>{fmt_pct(c['Probabilidad'] * 100)}",
                 ), unsafe_allow_html=True)
             with cq2:
-                if st.button("Quitar", key=f"quitar_{id_}"):
+                if st.button("✕", key=f"quitar_{id_}", help="Quitar"):
                     del st.session_state.picks_manual[id_]
                     st.rerun()
     else:
-        if usar_value:
-            st.caption("Por cada partido se toma el resultado con mejor edge (probabilidad × cuota − 1) entre los que tienen valor positivo; se descartan los partidos sin ninguna opción con edge > 0.")
-        else:
-            st.caption("Por cada partido se toma el resultado (Local/Empate/Visita) con mayor probabilidad; estos son los N más altos entre todas las ligas elegidas.")
         for c in elegidos:
-            stats = f"{fmt_pct(c['Probabilidad'] * 100)}<br>cuota {c['Cuota']:.2f}"
-            if usar_value:
-                stats += f"<br>edge {c['Edge %']:.1f}%"
             st.markdown(_pick_row_html(
-                f"<b>{c['Liga']}</b> · {c['Partido']}<br><span class='pr-sub'>{c['Pronóstico']} · {c['Fuente']}</span>",
-                stats,
+                c["Partido"], f"<b>{c['Pronóstico']}</b><br>{fmt_pct(c['Probabilidad'] * 100)}",
             ), unsafe_allow_html=True)
         if len(elegidos) < n_combinada:
-            st.warning(f"Solo hay {len(elegidos)} partidos con valor positivo disponibles entre las ligas elegidas."
-                       if usar_value else
-                       f"Solo hay {len(elegidos)} partidos disponibles entre las ligas elegidas.")
+            st.caption(f"Solo hay {len(elegidos)} disponibles.")
 
-    with st.expander("ℹ️ Nota sobre Xperto, Polla Gol y casas internacionales"):
+    with st.expander("ℹ️ Xperto / Polla Gol"):
         st.markdown(
-            "**[Xperto](https://xperto.polla.cl)** (Polla Chilena) es cuota fija, igual que este simulador: "
-            "arma sus jugadas combinadas con 3 a 10 eventos, tal como el slider de arriba. Es la opción local "
-            "más alineada con esta herramienta — pero Xperto no publica una API de cuotas, así que los números "
-            "acá vienen de casas internacionales (The Odds API) o del modo demo: son **referenciales**, no las "
-            "cuotas exactas que fija Xperto para cada partido.\n\n"
-            "**Polla Gol**, en cambio, es un pozo (pari-mutuel): el premio por categoría (11 a 14 aciertos) "
-            "depende de cuánta gente más acertó esa semana, no de una cuota fija — ahí no aplica el cálculo de "
-            "cuota combinada, pero sí te sirven las **probabilidades por partido** (abajo) para elegir tus picks."
+            "**[Xperto](https://xperto.polla.cl)** es cuota fija, igual que este simulador. **Polla Gol** es un "
+            "pozo (el premio depende de cuánta gente acertó esa semana, no de una cuota fija) — ahí no aplica la "
+            "cuota combinada, pero sí sirven las probabilidades de cada partido."
         )
-
-    st.caption(
-        "La probabilidad conjunta es el producto de probabilidades individuales — a más partidos en la "
-        "combinada, menor la chance de acertarla completa aunque la cuota suba. Información orientativa, "
-        "no una recomendación de apuesta. Juega responsable."
-    )
+    st.caption("Más partidos = menor probabilidad de acertar todos. Juega responsable.")
 elif usar_manual:
-    st.info("Todavía no elegiste ningún resultado — seleccioná arriba los partidos que quieras incluir.")
+    st.info("Todavía no elegiste ningún resultado — agrégalos arriba.")
 else:
-    st.warning("No hay partidos disponibles para armar una combinada."
-               + (" Prueba con 'Más seguro' o suma más ligas — 'Value bets' necesita partidos con edge positivo." if usar_value else ""))
+    st.warning("No hay partidos disponibles."
+               + (" 'Value bets' necesita partidos con edge positivo." if usar_value else ""))
 
 # =====================================================================
 # REINVERSIÓN PROGRESIVA — apostar en cadena, más seguro primero
+# (colapsado por defecto: es una vista alternativa/avanzada, no la respuesta principal)
 # =====================================================================
 st.markdown("---")
-st.markdown("## 🔁 Reinversión progresiva")
-st.caption(
-    "En vez de jugar todo en una sola boleta, arma una cadena: apuestas en el partido más seguro, y si ganas, "
-    "reinviertes (todo o una parte) en el siguiente. Puedes cortar en cualquier paso y quedarte con lo ganado hasta ahí."
-)
+with st.expander("🔁 Reinversión progresiva (apostar en cadena)", expanded=False):
+    st.caption("Si ganas, reinviertes en el siguiente paso — puedes cortar en cualquier paso y quedarte con lo ganado.")
 
-if elegidos:
-    cadena = sorted(elegidos, key=lambda c: c["Probabilidad"], reverse=True)
-    capital_inicial = monto
-    pct_reinversion = st.slider(
-        "% del capital que reinviertes en cada paso", min_value=0, max_value=100, value=100, step=10,
-        help="100% = todo el capital en juego pasa al siguiente paso (equivale matemáticamente a la combinada de "
-             "una sola boleta). Menos que 100% baja el riesgo porque vas guardando ganancia en el camino, a costa "
-             "de un capital final menor si aciertas todos los pasos.",
-    )
+    if elegidos:
+        cadena = sorted(elegidos, key=lambda c: c["Probabilidad"], reverse=True)
+        capital_inicial = monto
+        pct_reinversion = st.slider(
+            "% que reinviertes en cada paso", min_value=0, max_value=100, value=100, step=10,
+            help="100% equivale a la combinada de una sola boleta. Menos baja el riesgo pero también el capital final.",
+        )
 
-    en_juego = capital_inicial
-    guardado = 0.0
-    prob_acum = 1.0
-    for i, c in enumerate(cadena, start=1):
-        prob_acum *= c["Probabilidad"]
-        apostado = en_juego * (pct_reinversion / 100)
-        guardado += en_juego - apostado
-        en_juego = apostado * c["Cuota"]
+        en_juego = capital_inicial
+        guardado = 0.0
+        prob_acum = 1.0
+        for i, c in enumerate(cadena, start=1):
+            prob_acum *= c["Probabilidad"]
+            apostado = en_juego * (pct_reinversion / 100)
+            guardado += en_juego - apostado
+            en_juego = apostado * c["Cuota"]
 
-        main = (f"<b>Paso {i}</b> · {c['Partido']}<br>"
-                f"<span class='pr-sub'>{c['Pronóstico']} · {fmt_pct(c['Probabilidad'] * 100)} del paso "
-                f"(acumulada {fmt_pct(prob_acum * 100)})</span>")
-        stats = f"Apostado ${apostado:,.0f}<br>Si ganás: ${en_juego:,.0f}"
-        if guardado > 0.01:
-            stats += f"<br>Guardado: ${guardado:,.0f}"
-        stats += f"<br><b>Total si cortás: ${en_juego + guardado:,.0f}</b>"
-        st.markdown(_pick_row_html(main, stats), unsafe_allow_html=True)
-    st.caption(
-        f"Capital inicial ${capital_inicial:,.0f}. Con 100% de reinversión, el resultado final es matemáticamente "
-        f"igual a la combinada de una sola boleta con estos {len(cadena)} partidos. Bajar el % de reinversión te "
-        "deja ir asegurando plata en el camino en vez de arriesgarla toda de nuevo en cada paso — el costo es un "
-        "capital final menor si aciertas todos los pasos."
-    )
-else:
-    st.info("Elige partidos para simular la cadena de reinversión.")
+            main = (f"<b>Paso {i}</b> · {c['Partido']}<br>"
+                    f"<span class='pr-sub'>{c['Pronóstico']} · {fmt_pct(c['Probabilidad'] * 100)} "
+                    f"(acumulada {fmt_pct(prob_acum * 100)})</span>")
+            stats = f"Apostado ${apostado:,.0f}<br>Si ganas: ${en_juego:,.0f}"
+            if guardado > 0.01:
+                stats += f"<br>Guardado: ${guardado:,.0f}"
+            stats += f"<br><b>Total si cortas: ${en_juego + guardado:,.0f}</b>"
+            st.markdown(_pick_row_html(main, stats), unsafe_allow_html=True)
+        st.caption(f"Capital inicial ${capital_inicial:,.0f}. Bajar el % de reinversión asegura plata en el camino a costa de un capital final menor.")
+    else:
+        st.info("Elige partidos para simular la cadena.")
 
 # =====================================================================
 # DETALLE POR LIGA — partidos completos de cada liga/copa, colapsado
 # (queda abajo de todo: es información de referencia, no la respuesta)
 # =====================================================================
 st.markdown("---")
-with st.expander("📋 Ver todos los partidos por liga (detalle completo)", expanded=False):
+with st.expander("📋 Partidos por liga", expanded=False):
     tabs = st.tabs([f"{LIGAS[l]['emoji']} {l}" for l in ligas_sel])
     for tab, liga in zip(tabs, ligas_sel):
         with tab:
             partidos = datos_por_liga[liga]
             if not partidos:
-                st.warning("No hay partidos disponibles para esta liga.")
+                st.caption("Sin partidos.")
                 continue
-            filas = []
             for p in partidos:
-                filas.append({
-                    "Partido": f"{p['local']} vs {p['visita']}",
-                    "Fecha": p["fecha"],
-                    "Local %": round(p["prob"]["L"] * 100, 1),
-                    "Empate %": round(p["prob"]["E"] * 100, 1),
-                    "Visita %": round(p["prob"]["V"] * 100, 1),
-                    "Cuota L": p["cuota"]["L"],
-                    "Cuota E": p["cuota"]["E"],
-                    "Cuota V": p["cuota"]["V"],
-                    "Fuente": p["fuente"],
-                })
-            df = pd.DataFrame(filas)
-            st.dataframe(
-                df.style
-                    .background_gradient(subset=["Local %", "Empate %", "Visita %"], cmap="Blues")
-                    .format({"Local %": "{:.1f}", "Empate %": "{:.1f}", "Visita %": "{:.1f}",
-                              "Cuota L": "{:.2f}", "Cuota E": "{:.2f}", "Cuota V": "{:.2f}"}),
-                use_container_width=True, hide_index=True,
-            )
+                main = f"{p['local']} vs {p['visita']}"
+                stats = f"L {p['prob']['L'] * 100:.0f}% · E {p['prob']['E'] * 100:.0f}% · V {p['prob']['V'] * 100:.0f}%"
+                st.markdown(_pick_row_html(main, stats), unsafe_allow_html=True)
